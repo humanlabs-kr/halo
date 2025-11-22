@@ -7,6 +7,7 @@ import v1Routes from './routes';
 import type { ContextType } from './types';
 import { useDB } from './utils/db';
 import scalar from './utils/scalar';
+import * as queues from './queue';
 
 const app = new Hono<ContextType>();
 
@@ -44,9 +45,8 @@ app.use(
 		credentials: true,
 		allowHeaders: ['Content-Type', 'Authorization', 'Cookie'],
 		exposeHeaders: ['Set-Cookie'],
-	})
+	}),
 );
-
 
 const openapi = fromHono(app, {
 	openapi_url: '/api/openapi.json',
@@ -60,5 +60,14 @@ openapi.route('/v1', v1Routes);
 export default {
 	async fetch(request, env, ctx) {
 		return openapi.fetch(request, env, ctx);
+	},
+	async queue(batch, env, ctx) {
+		Promise.allSettled(
+			Object.values(queues).map((queue) => {
+				if (batch.queue.includes(queue.name)) {
+					return queue.run(batch, env, ctx);
+				}
+			}),
+		);
 	},
 } satisfies ExportedHandler<Env>;

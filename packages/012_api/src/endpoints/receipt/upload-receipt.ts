@@ -7,6 +7,7 @@ import { Synapse } from 'workers/services/synapse';
 import { waitUntil } from 'cloudflare:workers';
 import { eq, receiptImages, receipts } from '@hl/database';
 import { randomUUID } from 'crypto';
+import { ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queue';
 
 export class ScanUploadReceipt extends OpenAPIRoute {
 	schema = {
@@ -91,9 +92,9 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 		// upload to r2 for use after in AI and synapse
 		const arrayBuffer = await rawFile.arrayBuffer();
 		const inputBytes = new Uint8Array(arrayBuffer);
-		// const normalizedImage = ReceiptProcessor.normalizeImage(inputBytes);
+		const normalizedImage = ReceiptProcessor.normalizeImage(inputBytes);
 
-		const r2ImageResult = await R2.saveReceiptImage(inputBytes);
+		const r2ImageResult = await R2.saveReceiptImage(normalizedImage);
 
 		await c
 			.get('db')
@@ -104,8 +105,18 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 			.where(eq(receiptImages.id, receiptImageIds[0]));
 
 		// Send to queue for AI
+		waitUntil(
+			ReceiptAnalysisQueue.send({
+				receiptId,
+			}),
+		);
 
 		// send to queue for synapse, (for synapse, iterate over each receipt image ids)
+		waitUntil(
+			SynapseUploadQueue.send({
+				receiptImageId: receiptImageIds[0],
+			}),
+		);
 
 		return c.json({
 			result: 'success',

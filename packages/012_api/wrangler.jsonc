@@ -22,6 +22,32 @@
       "bucket_name": "receipto"
     }
   ],
+  "queues": {
+    "consumers": [
+      {
+        "queue": "receipto-dev-receipt-analysis",
+        "max_batch_size": 1,
+        "retry_delay": 10000,
+        "max_concurrency": 1
+      },
+      {
+        "queue": "receipto-dev-synapse-upload",
+        "max_batch_size": 1,
+        "retry_delay": 10000,
+        "max_concurrency": 1,
+      }
+    ],
+    "producers": [
+      {
+        "binding": "RECEIPT_ANALYSIS_QUEUE",
+        "queue": "receipto-dev-receipt-analysis",
+      },
+      {
+        "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
+        "queue": "receipto-dev-synapse-upload"
+      }
+    ]
+  },
   "env": {
     "staging": {
       "name": "receipto-api-staging",
@@ -44,7 +70,33 @@
           "binding": "RECEIPT_R2_BUCKET",
           "bucket_name": "receipto",
         }
-      ]
+      ],
+      "queues": {
+        "consumers": [
+          {
+            "queue": "receipto-staging-receipt-analysis",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1
+          },
+          {
+            "queue": "receipto-staging-synapse-upload",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1,
+          }
+        ],
+        "producers": [
+          {
+            "binding": "RECEIPT_ANALYSIS_QUEUE",
+            "queue": "receipto-staging-receipt-analysis",
+          },
+          {
+            "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
+            "queue": "receipto-staging-synapse-upload"
+          }
+        ]
+      },
     },
     "production": {
       "name": "receipto-api-prod",
@@ -67,7 +119,33 @@
           "binding": "RECEIPT_R2_BUCKET",
           "bucket_name": "receipto"
         }
-      ]
+      ],
+      "queues": {
+        "consumers": [
+          {
+            "queue": "receipto-receipt-analysis",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1
+          },
+          {
+            "queue": "receipto-synapse-upload",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1,
+          }
+        ],
+        "producers": [
+          {
+            "binding": "RECEIPT_ANALYSIS_QUEUE",
+            "queue": "receipto-receipt-analysis",
+          },
+          {
+            "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
+            "queue": "receipto-synapse-upload"
+          }
+        ]
+      },
     }
   }
 }
