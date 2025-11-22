@@ -2,10 +2,10 @@ import { env } from 'cloudflare:workers';
 import { randomUUID } from 'crypto';
 
 export const R2 = {
-	saveReceiptImage: async (image: Uint8Array): Promise<{ key: string }> => {
+	saveReceiptImage: async (image: Uint8Array, key?: string): Promise<{ key: string }> => {
 		try {
-			const key = randomUUID();
-			const result = await env.RECEIPT_R2_BUCKET.put(key, image, {
+			const fileKey = key ?? randomUUID();
+			const result = await env.RECEIPT_R2_BUCKET.put(fileKey, image, {
 				httpMetadata: {
 					contentType: 'image/jpeg',
 				},

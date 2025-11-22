@@ -7,8 +7,8 @@
   "scripts": {
     "deps:check": "syncpack list-mismatches",
     "deps:fix": "syncpack fix-mismatches",
-    "setup": "turbo setup",
-    "dev": "turbo dev",
+    "setup": "turbo setup --filter='!@hl/fluence-ocr'",
+    "dev": "turbo dev --filter='!@hl/fluence-ocr'",
     "migrate": "turbo migrate",
     "orval": "turbo orval",
     "lint": "pnpm lint",

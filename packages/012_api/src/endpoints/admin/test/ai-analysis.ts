@@ -1,11 +1,7 @@
 import { OpenAPIRoute } from 'chanfana';
 import { z } from 'zod';
 import type { AppContext } from 'workers/types';
-import { ReceiptProcessor } from '../../services/receipt-processor';
-import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
-
-const MAX_LONG_EDGE = 1280;
-const JPEG_QUALITY = 0.75;
+import { ReceiptProcessor } from '../../../services/receipt-processor';
 
 // Import schema from receipt-processor (we'll need to export it)
 const ReceiptItemSchema = z.object({
@@ -30,9 +26,9 @@ const ReceiptDataSchema = z.object({
 	notes: z.string().optional().nullable(),
 });
 
-export class TestReceiptImage extends OpenAPIRoute {
+export class TestReceiptImageAnalysis extends OpenAPIRoute {
 	schema = {
-		tags: ['Test'],
+		tags: ['Admin'],
 		summary: 'Test receipt image analysis',
 		security: [{ cookie: [] }],
 		request: {

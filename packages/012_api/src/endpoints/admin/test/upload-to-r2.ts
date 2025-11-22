@@ -1,14 +1,11 @@
 import { OpenAPIRoute } from 'chanfana';
 import { z } from 'zod';
 import type { AppContext } from 'workers/types';
-import { ReceiptProcessor } from '../../services/receipt-processor';
-import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
-import { Synapse } from 'workers/services/synapse';
 import { R2 } from 'workers/utils/r2';
 
 export class TestR2Upload extends OpenAPIRoute {
 	schema = {
-		tags: ['Test'],
+		tags: ['Admin'],
 		summary: 'Test R2 Upload',
 		security: [{ cookie: [] }],
 		request: {

@@ -1,13 +1,11 @@
 import { OpenAPIRoute } from 'chanfana';
 import { z } from 'zod';
 import type { AppContext } from 'workers/types';
-import { ReceiptProcessor } from '../../services/receipt-processor';
-import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
 import { Synapse } from 'workers/services/synapse';
 
 export class AdminSynapseTestUpload extends OpenAPIRoute {
 	schema = {
-		tags: ['Test'],
+		tags: ['Admin'],
 		summary: 'Test Synapse Upload',
 		security: [{ cookie: [] }],
 		request: {

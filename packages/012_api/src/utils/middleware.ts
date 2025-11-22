@@ -38,3 +38,16 @@ export const jwtAuthMiddleware = async (c: Context, next: Next) => {
 		return c.json({ code: 'UNAUTHORIZED', error: 'Invalid token' }, 401);
 	}
 };
+
+export const adminAuthMiddleware = async (c: Context, next: Next) => {
+	const token = c.req.header('Authorization');
+	if (!token) {
+		return c.json({ code: 'UNAUTHORIZED', error: 'Unauthorized - Authentication required' }, 401);
+	}
+
+	if (token !== 'Bearer IAMADMIN') {
+		return c.json({ code: 'UNAUTHORIZED', error: 'Unauthorized - Authentication required' }, 401);
+	}
+
+	await next();
+};

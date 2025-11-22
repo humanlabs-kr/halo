@@ -10,7 +10,12 @@
     "format": "python3 -m black src/",
     "lint": "python3 -m pylint src/"
   },
-  "keywords": ["fluence", "ocr", "receipt", "tesseract"],
+  "keywords": [
+    "fluence",
+    "ocr",
+    "receipt",
+    "tesseract"
+  ],
   "author": "",
   "license": "MIT"
 }

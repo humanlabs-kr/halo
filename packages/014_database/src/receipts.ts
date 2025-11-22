@@ -8,11 +8,11 @@ import {
 } from "drizzle-orm/pg-core";
 import { schema } from "./schema";
 import { users } from "./users";
+import { relations } from "drizzle-orm";
+import { receiptImages } from "./receipt-images";
 
-export const receipt = schema.table("receipt", {
-  id: uuid("id").primaryKey(),
-  synapsePieceCid: varchar("synapse_piece_cid", { length: 255 }),
-  r2Key: varchar("r2_key", { length: 36 }),
+export const receipts = schema.table("receipts", {
+  id: uuid("id").primaryKey().defaultRandom(),
 
   userAddress: varchar("user_address", { length: 255 })
     .references(() => users.address, { onDelete: "restrict" })
@@ -24,7 +24,7 @@ export const receipt = schema.table("receipt", {
   currency: varchar("currency", { length: 10 }),
   totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
   paymentMethod: text("payment_method"),
-  qualityRate: integer("quality_rate").notNull(),
+  qualityRate: integer("quality_rate"),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -33,3 +33,11 @@ export const receipt = schema.table("receipt", {
     () => new Date()
   ),
 });
+
+export const receiptsRelations = relations(receipts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [receipts.userAddress],
+    references: [users.address],
+  }),
+  images: many(receiptImages),
+}));
