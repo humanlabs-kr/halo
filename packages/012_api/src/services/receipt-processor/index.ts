@@ -162,7 +162,7 @@ If ANY of the following is true:
 					},
 				],
 				response_format: zodResponseFormat(FullReceiptSchema, 'analysis'),
-				reasoning_effort: 'low',
+				reasoning_effort: 'medium',
 			});
 
 			if (!completion.choices[0].message.content) {
