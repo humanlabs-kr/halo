@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Reference to this schema file"
+    },
+    "local-override": {
+      "type": "object",
+      "description": "Local developer overrides for environment variables",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "description": "Developer-specific configuration",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "object",
+              "description": "Package-specific environment variables",
+              "patternProperties": {
+                "^[A-Z_][A-Z0-9_]*$": {
+                  "type": "string",
+                  "description": "Environment variable"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "project": {
+      "type": "object",
+      "description": "Project-wide configuration for all packages",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "description": "Package configuration",
+          "properties": {
+            "path": {
+              "type": "string",
+              "description": "Path to the package directory"
+            },
+            "env-type": {
+              "type": "string",
+              "enum": ["wrangler.jsonc", ".env", "both"],
+              "description": "Environment file type (optional)"
+            },
+            "local": {
+              "type": "object",
+              "description": "Local environment variables",
+              "patternProperties": {
+                "^[A-Z_][A-Z0-9_]*$": {
+                  "type": "string",
+                  "description": "Environment variable"
+                }
+              }
+            },
+            "staging": {
+              "type": "object",
+              "description": "Staging environment variables",
+              "patternProperties": {
+                "^[A-Z_][A-Z0-9_]*$": {
+                  "type": "string",
+                  "description": "Environment variable"
+                }
+              }
+            },
+            "production": {
+              "type": "object",
+              "description": "Production environment variables",
+              "patternProperties": {
+                "^[A-Z_][A-Z0-9_]*$": {
+                  "type": "string",
+                  "description": "Environment variable"
+                }
+              }
+            }
+          },
+          "required": ["path", "env-type"]
+        }
+      }
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": false
+}

@@ -1,0 +1,25 @@
+node_modules
+.turbo
+packages/contracts/
+packages/web/
+.mynameis
+
+# Environment files
+.env
+.env.local
+.env.staging
+.env.production
+
+# Environment decryption files
+decrypt.pem
+env.jsonc
+
+# Environment files in all packages
+packages/**/.env
+packages/**/.env.local
+packages/**/.env.staging
+packages/**/.env.production
+packages/**/build
+.DS_Store
+.claude
+.env.production.json

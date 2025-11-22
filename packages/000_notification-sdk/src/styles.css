@@ -1,0 +1,32 @@
+/* Custom styles for the notification SDK */
+.notification-sdk-provider {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure notifications don't interfere with page content */
+#notification-sdk-container {
+  pointer-events: none;
+}
+
+#notification-sdk-container > * {
+  pointer-events: auto;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  #notification-sdk-container {
+    left: 10px !important;
+    right: 10px !important;
+    top: 10px !important;
+    bottom: auto !important;
+  }
+
+  #notification-sdk-container > * {
+    max-width: none;
+    width: 100%;
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "api",
+  "account_id": "6377196122dd8a0ce3a9b3ef18fdfdd7",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "compatibility_date": "2025-09-25",
+  "main": "./src/index.ts",
+  "observability": {
+    "enabled": true
+  },
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "local"
+    }
+  ],
+  "env": {
+    "staging": {
+      "name": "receipto-api-staging",
+      "route": {
+        "pattern": "api.receipto.seriesc.dev",
+        "zone_name": "seriesc.dev",
+        "custom_domain": true
+      },
+      "placement": {
+        "mode": "smart"
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "f7cffaabeb1e43588863d84548939423"
+        }
+      ]
+    },
+    "production": {
+      "name": "receipto-api-prod",
+      "route": {
+        "pattern": "api.receipto.humanlabs.world",
+        "zone_name": "humanlabs.world",
+        "custom_domain": true
+      },
+      "placement": {
+        "mode": "smart"
+      },
+      "hyperdrive": [
+        {
+          "binding": "HYPERDRIVE",
+          "id": "2cfcadaf728446aaaf350df0ef02705c"
+        }
+      ]
+    }
+  }
+}

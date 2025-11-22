@@ -1,0 +1,12 @@
+{
+  "name": "@hl/lola",
+  "private": true,
+  "version": "0.0.1",
+  "exports": {
+    ".": {
+      "types": "./src/plugin.d.ts",
+      "default": "./src/plugin.js"
+    }
+  },
+  "type": "module"
+}

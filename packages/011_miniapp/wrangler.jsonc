@@ -1,0 +1,41 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "miniapp",
+  "main": "worker/index.ts",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "compatibility_date": "2025-05-23",
+  "account_id": "6377196122dd8a0ce3a9b3ef18fdfdd7",
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "single-page-application",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.001
+  },
+  "workers_dev": false,
+  "env": {
+    "staging": {
+      "name": "receipto-miniapp-staging",
+      "route": {
+        "pattern": "miniapp.receipto.seriesc.dev",
+        "zone_name": "seriesc.dev",
+        "custom_domain": true
+      },
+    },
+    "production": {
+      "name": "receipto-miniapp-prod",
+      "route": {
+        "pattern": "miniapp.receipto.humanlabs.world",
+        "zone_name": "humanlabs.world",
+        "custom_domain": true
+      },
+    }
+  },
+  "placement": {
+    "mode": "smart"
+  }
+}

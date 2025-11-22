@@ -1,0 +1,21 @@
+{
+  "name": "@hl/server-common",
+  "version": "1.0.0",
+  "description": "Shared server utilities and common functionality",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tsndr/cloudflare-worker-jwt": "3.1.4"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.8.3"
+  },
+  "private": true
+}

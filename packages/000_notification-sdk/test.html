@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notification SDK Test</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Notification SDK Test</h1>
+
+      <div class="info">
+        <strong>Instructions:</strong>
+        <ul>
+          <li>
+            Add <span class="code">?v=nsdk</span> to the URL to see the
+            notification UI
+          </li>
+          <li>Use the buttons below to test different notification types</li>
+          <li>Check the browser console for SDK logs</li>
+        </ul>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-primary" onclick="setAddress()">Set Address</button>
+      </div>
+
+      <div class="info">
+        <strong>Current Config:</strong>
+        <pre id="config-display">Loading...</pre>
+      </div>
+    </div>
+
+    <!-- Load the Notification SDK (CSS is included inline) -->
+    <script src="https://nsdk.x3x.studio/nsdk.js"></script>
+
+    <script>
+      window.nsdk.setUser(
+        "app_8fa94e7384f9634e6797d6fe132fe35a",
+        "0x68a4591fdf41652716b08056cdcd869dfdbd7c80",
+        true
+      );
+    </script>
+  </body>
+</html>

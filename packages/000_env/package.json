@@ -1,0 +1,21 @@
+{
+  "name": "@hl/env",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "./scripts/setup.sh",
+    "encrypt": "./scripts/env.sh encrypt",
+    "decrypt": "./scripts/env.sh decrypt",
+    "dev": "./scripts/dev.sh",
+    "refresh": "pnpm encrypt && node ./scripts/env.js generate && cd ../ && pnpm typegen",
+    "generate": "node ./scripts/env.js generate",
+    "clean": "node ./scripts/env.js clean",
+    "ci": "node ./scripts/env.js generate --ci"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "strip-json-comments": "^5.0.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@hl/database",
+  "version": "1.0.1",
+  "description": "Database schema",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "kit": "dotenv -e .env -- npx drizzle-kit --config drizzle.config.ts",
+    "kit:staging": "dotenv -e .env.staging -- npx drizzle-kit --config drizzle.config.ts",
+    "kit:production": "dotenv -e .env.production -- npx drizzle-kit --config drizzle.config.ts",
+    "deploy:staging": "pnpm kit:staging migrate",
+    "deploy:production": "pnpm kit:production migrate"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "dotenv-cli": "^10.0.0",
+    "drizzle-kit": "^0.31.1",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.43.1",
+    "ksuid": "^3.0.0",
+    "postgres": "^3.4.7"
+  },
+  "private": true
+}

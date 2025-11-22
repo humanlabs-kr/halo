@@ -1,0 +1,36 @@
+{
+  "$schema": "./node_modules/turbo/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"]
+    },
+    "type-check": {
+      "dependsOn": ["^type-check"]
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "typegen": {
+      "cache": true
+    },
+    "setup": {
+      "cache": false,
+      "persistent": false,
+      "dependsOn": ["^setup"]
+    },
+    "migrate": {
+      "cache": false
+    },
+    "orval": {
+      "cache": false,
+      "persistent": false
+    },
+    "dev": {
+      "dependsOn": ["setup"],
+      "persistent": true,
+      "interactive": true,
+      "cache": false
+    }
+  }
+}

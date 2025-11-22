@@ -1,0 +1,25 @@
+{
+  "name": "@hl/notification-sdk",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b && vite build && node scripts/inline-css.js && rm -f vite.config.js",
+    "deploy": "dotenv -e .env -- npm run build && CLOUDFLARE_ACCOUNT_ID=6377196122dd8a0ce3a9b3ef18fdfdd7 wrangler pages deploy dist",
+    "type-check": "pnpm build"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "dotenv-cli": "^10.0.0",
+    "rollup-plugin-css-only": "^3.1.0",
+    "typescript": "^5.8.3",
+    "vite": "^7.1.2",
+    "wrangler": "4.48.0"
+  }
+}

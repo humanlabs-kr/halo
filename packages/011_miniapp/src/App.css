@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+* {
+  font-family: var(--font-inter);
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+}
+
+
+body {
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+@theme inline {
+  --color-card-background: #F5F5F5;
+  --color-card-text: #6F6F6F;
+  --color-success: #30FF21;
+  --font-inter: "Inter", sans-serif;
+}
+@layer utilities {
+  @keyframes login-float {
+    0% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-login-float {
+    animation: login-float 3.2s ease-in-out infinite;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes progress-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .animate-progress {
+    animation: progress-fill var(--progress-duration, 5s) linear forwards;
+    transform-origin: left;
+    transform: scaleX(0);
+    width: 100%;
+  }
+
+  @keyframes flash-mask {
+    0% {
+      opacity: 0;
+    }
+    45% {
+      opacity: 0;
+    }
+    55% {
+      opacity: 0.65;
+    }
+    62% {
+      opacity: 0.95;
+    }
+    75% {
+      opacity: 0.2;
+    }
+    100% {
+      opacity: 0;
+    }
+  }
+
+  .animate-flash-mask {
+    animation: flash-mask 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    animation-delay: 0.25s;
+    opacity: 0;
+  }
+}

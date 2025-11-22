@@ -1,0 +1,35 @@
+{
+  "name": "hp-monorepo",
+  "version": "1.0.0",
+  "description": "",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "deps:check": "syncpack list-mismatches",
+    "deps:fix": "syncpack fix-mismatches",
+    "setup": "turbo setup",
+    "dev": "turbo dev",
+    "migrate": "turbo migrate",
+    "orval": "turbo orval",
+    "lint": "pnpm lint",
+    "typegen": "turbo typegen",
+    "type-check": "turbo type-check",
+    "clean": "find . -name 'node_modules' -type d -prune -print -exec rm -rf {} +",
+    ":env": "pnpm --filter @hl/env",
+    "miniapp": "pnpm --filter @hl/miniapp",
+    "api": "pnpm --filter @hl/api",
+    "evm-contracts": "pnpm --filter @hl/evm-contracts",
+    "database": "pnpm --filter @hl/database",
+    "web": "pnpm --filter @hl/web",
+    "doc": "pnpm --filter @hl/docs",
+    "notification-sdk": "pnpm --filter @hl/notification-sdk",
+    "links": "pnpm --filter @hl/link"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "syncpack": "^13.0.4",
+    "turbo": "^2.5.2"
+  }
+}

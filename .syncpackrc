@@ -1,0 +1,39 @@
+{
+  "versionGroups": [
+    {
+      "label": "Use workspace protocol for local packages",
+      "dependencies": [
+        "$LOCAL"
+      ],
+      "dependencyTypes": [
+        "prod",
+        "dev",
+        "peer",
+        "optional"
+      ],
+      "packages": [
+        "**"
+      ],
+      "pinVersion": "workspace:*"
+    }
+  ],
+  "semverGroups": [
+    {
+      "range": "workspace:*",
+      "dependencies": [
+        "**"
+      ]
+    },
+    {
+      "packages": [
+        "**"
+      ],
+      "dependencies": [
+        "@tailwindcss/vite",
+        "react",
+        "react-dom"
+      ],
+      "range": "^"
+    }
+  ]
+}
