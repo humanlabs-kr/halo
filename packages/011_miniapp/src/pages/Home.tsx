@@ -164,8 +164,16 @@ function TutorialCard() {
 }
 
 function PromoCard() {
+  const navigate = useNavigate();
+
   return (
-    <article className="pressed relative min-h-[340px] overflow-hidden rounded-[32px] bg-[#FFAAAA]/20 p-5 text-card-text">
+    <article 
+      className="pressed relative min-h-[340px] overflow-hidden rounded-[32px] bg-[#FFAAAA]/20 p-5 text-card-text cursor-pointer"
+      onClick={() => {
+        sendLightImpactHaptic();
+        navigate("/history");
+      }}
+    >
       <img
         src="/main-banner2.png"
         alt="프로모션"
@@ -174,9 +182,9 @@ function PromoCard() {
       <div className="relative z-10 mb-4 flex items-center justify-between">
         <div>
           <p className="text-base font-semibold text-black">
-            Limited Time Offer
+            View Your Scan History
           </p>
-          <p className="text-sm">November 20th</p>
+          <p className="text-sm">Check your past receipts</p>
         </div>
         <img src="/u_arrow-right.svg" alt="더보기" className="h-6 w-6" />
       </div>
