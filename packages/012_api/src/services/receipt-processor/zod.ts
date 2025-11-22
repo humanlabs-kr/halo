@@ -9,17 +9,18 @@ export const ReceiptItemSchema = z.object({
 
 export const ReceiptSchema = z.object({
   merchantName: z.string().nullable().describe("Merchant name"),        // 브랜드명
-  merchantLegalName: z.string().nullable().describe("Legal name"),   // 법인명
-  merchantTaxId: z.string().nullable().describe("Tax ID"),       // 세금번호
-  storeId: z.string().nullable().describe("Store ID"),             // 매장 번호
-  receiptNumber: z.string(),
+  //merchantLegalName: z.string().nullable().describe("Legal name"),   // 법인명
+  //merchantTaxId: z.string().nullable().describe("Tax ID"),       // 세금번호
+  //storeId: z.string().nullable().describe("Store ID"),             // 매장 번호
+  //receiptNumber: z.string(),
   issuedAt: z.coerce.date().describe("Issued at"),
   countryCode: z.string().length(2).describe("ISO country code"),          // ISO 국가코드 (US, AR, KR 등)
   currency: z.string().length(3).describe("ISO currency code"),             // ISO 통화코드 (USD, ARS 등)
   totalAmount: z.number().nullable(),
-  taxAmount: z.number().nullable(),
+  //taxAmount: z.number().nullable(),
   paymentMethod: z.string().nullable().describe("Payment method"),
-  items: z.array(ReceiptItemSchema),
+  //items: z.array(ReceiptItemSchema),
+  qualityRate: z.number().describe("Image quality of receipt").min(0).max(100),
 });
 
 export const FullReceiptSchema = ReceiptSchema
