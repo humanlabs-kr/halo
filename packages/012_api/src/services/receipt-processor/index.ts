@@ -1,18 +1,14 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import { FullReceiptSchema } from "./zod";
+import { env } from "cloudflare:workers";
 
 
-// Cloudflare AI Gateway configuration
-const GATEWAY_BASE_URL = "https://gateway.ai.cloudflare.com/v1/6377196122dd8a0ce3a9b3ef18fdfdd7/receipto";
-const GATEWAY_TOKEN = "";
-
-// Initialize OpenAI client with Cloudflare AI Gateway
 const openai = new OpenAI({
-  baseURL: `${GATEWAY_BASE_URL}/openai`,
-  apiKey: "", // Not used, but required by SDK
+  baseURL: `https://gateway.ai.cloudflare.com/v1/6377196122dd8a0ce3a9b3ef18fdfdd7/receipto/openai`,
+  apiKey: env.OPENAI_API_KEY,
   defaultHeaders: {
-    "cf-aig-authorization": `Bearer ${GATEWAY_TOKEN}`,
+    "cf-aig-authorization": `Bearer ${env.API_GATEWAY_TOKEN}`,
   },
 });
 
