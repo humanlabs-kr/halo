@@ -11,6 +11,28 @@ const progressList = [
   { label: "Weekly Scans", value: "31/35", ratio: 0.89 },
 ];
 
+/**
+ * Level tiers:
+ * - Level 1: 0-500 pts
+ * - Level 2: 501-1000 pts
+ * - ...
+ * - Level 10: 4501-5000 pts (500pt increments)
+ * - Level 11: 5001-6000 pts
+ * - Level 12: 6001-7000 pts
+ * - ...
+ * - Level 99: max (1000pt increments after level 10)
+ */
+function calculateLevel(accumulatedPoints: number): number {
+  if (accumulatedPoints <= 500) {
+    return 1;
+  } else if (accumulatedPoints <= 5000) {
+    return Math.floor((accumulatedPoints - 1) / 500) + 1;
+  } else {
+    const level = 10 + Math.floor((accumulatedPoints - 5000) / 1000) + 1;
+    return Math.min(level, 99);
+  }
+}
+
 function Home() {
   return (
     <>
@@ -29,6 +51,13 @@ function Home() {
 
 function HomeHeader() {
   const { user } = useWorldAuthStore();
+  
+  // TODO: Replace with actual API data
+  const currentPoints = 15000;
+  const accumulatedHistoricalPoints = 25000;
+  
+  const userLevel = calculateLevel(accumulatedHistoricalPoints);
+  
   return (
     <header className="flex items-center justify-between px-2 pt-1">
       <div className="flex items-center gap-3">
@@ -43,11 +72,13 @@ function HomeHeader() {
           <p className="text-[14px] font-medium text-card-text">
             @{user.username}
           </p>
-          <p className="text-[18px] font-semibold">15,000 Pts</p>
+          <p className="text-[18px] font-semibold">
+            {currentPoints.toLocaleString()} Pts
+          </p>
         </div>
       </div>
       <span className="rounded-full bg-card-background px-4 py-1 text-sm font-semibold text-black">
-        Lv.5
+        Lv.{userLevel}
       </span>
     </header>
   );
