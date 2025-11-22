@@ -40,25 +40,25 @@ export const SynapseConfig = {
 				Application: 'Receipto',
 				Version: '1.0.0',
 			},
-			callbacks: {
-				onDataSetResolved: (info) => {
-					if (info.isExisting) {
-						console.log(`Data set with id ${info.dataSetId}`, `matches your context criteria and will be reused`);
-					} else {
-						console.log(`No matching data set found`, `A new data set will be created in the next file upload`, `In a single transaction!`);
-					}
-				},
-				onProviderSelected: (provider) => {
-					console.log(
-						`Selected Provider with \n`,
-						` id: ${provider.id} \n`,
-						` name: ${provider.name} \n`,
-						` description: ${provider.description} \n`,
-						` address: ${provider.serviceProvider} \n`,
-						` products: ${JSON.stringify(provider.products, (key, value) => (typeof value === 'bigint' ? value.toString() + 'n' : value), 2)}`,
-					);
-				},
-			},
+			// callbacks: {
+			// 	onDataSetResolved: (info) => {
+			// 		if (info.isExisting) {
+			// 			console.log(`Data set with id ${info.dataSetId}`, `matches your context criteria and will be reused`);
+			// 		} else {
+			// 			console.log(`No matching data set found`, `A new data set will be created in the next file upload`, `In a single transaction!`);
+			// 		}
+			// 	},
+			// 	onProviderSelected: (provider) => {
+			// 		console.log(
+			// 			`Selected Provider with \n`,
+			// 			` id: ${provider.id} \n`,
+			// 			` name: ${provider.name} \n`,
+			// 			` description: ${provider.description} \n`,
+			// 			` address: ${provider.serviceProvider} \n`,
+			// 			` products: ${JSON.stringify(provider.products, (key, value) => (typeof value === 'bigint' ? value.toString() + 'n' : value), 2)}`,
+			// 		);
+			// 	},
+			// },
 		});
 	},
 };

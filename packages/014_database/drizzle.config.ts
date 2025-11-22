@@ -9,7 +9,7 @@ export default defineConfig({
     url: process.env.DATABASE_MIGRATION_URL!,
   },
   migrations: {
-    table: 'migrations',
+    table: "migrations",
     prefix: "timestamp",
     schema: process.env.DATABASE_SCHEMA!,
   },

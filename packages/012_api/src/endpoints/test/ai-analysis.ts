@@ -3,12 +3,37 @@ import { z } from 'zod';
 import type { AppContext } from 'workers/types';
 import { ReceiptProcessor } from '../../services/receipt-processor';
 import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
-import { Synapse } from 'workers/services/synapse';
 
-export class AdminSynapseTestUpload extends OpenAPIRoute {
+const MAX_LONG_EDGE = 1280;
+const JPEG_QUALITY = 0.75;
+
+// Import schema from receipt-processor (we'll need to export it)
+const ReceiptItemSchema = z.object({
+	name: z.string(),
+	quantity: z.number().optional().nullable(),
+	unitPrice: z.number().optional().nullable(),
+	totalPrice: z.number(),
+});
+
+const ReceiptDataSchema = z.object({
+	merchantName: z.string(),
+	merchantAddress: z.string().optional().nullable(),
+	transactionDate: z.string().optional().nullable(),
+	transactionTime: z.string().optional().nullable(),
+	totalAmount: z.number(),
+	currency: z.string(),
+	taxAmount: z.number().optional().nullable(),
+	subtotal: z.number().optional().nullable(),
+	items: z.array(ReceiptItemSchema),
+	paymentMethod: z.string().optional().nullable(),
+	receiptNumber: z.string().optional().nullable(),
+	notes: z.string().optional().nullable(),
+});
+
+export class TestReceiptImage extends OpenAPIRoute {
 	schema = {
 		tags: ['Test'],
-		summary: 'Test Synapse Upload',
+		summary: 'Test receipt image analysis',
 		security: [{ cookie: [] }],
 		request: {
 			body: {
@@ -32,11 +57,7 @@ export class AdminSynapseTestUpload extends OpenAPIRoute {
 				description: 'Success',
 				content: {
 					'application/json': {
-						schema: z.object({
-							pieceCid: z.string(),
-							size: z.number(),
-							pieceId: z.string(),
-						}),
+						schema: ReceiptDataSchema,
 					},
 				},
 			},
@@ -82,16 +103,16 @@ export class AdminSynapseTestUpload extends OpenAPIRoute {
 			return c.json({ error: 'file must be a file' }, 400);
 		}
 
-		const arrayBuffer = await rawFile.arrayBuffer();
-		const inputBytes = new Uint8Array(arrayBuffer);
-
 		try {
-			const { pieceCid, size, pieceId } = await Synapse.saveReceiptImage(inputBytes);
+			const arrayBuffer = await rawFile.arrayBuffer();
+			const inputBytes = new Uint8Array(arrayBuffer);
 
-			return c.json({ pieceCid, size, pieceId });
+			const receiptData = await ReceiptProcessor.process(inputBytes);
+
+			return receiptData;
 		} catch (error) {
-			console.error('Error saving receipt to Synapse:', error);
-			return c.json({ error: error instanceof Error ? error.message : 'Failed to save receipt to Synapse' }, 500);
+			console.error('Error processing receipt:', error);
+			return c.json({ error: error instanceof Error ? error.message : 'Failed to process receipt' }, 500);
 		}
 	}
 }

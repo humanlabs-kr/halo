@@ -12,10 +12,14 @@ import { AuthSessionRevoke } from './endpoints/auth/session/revoke';
 import { AuthSessionStatus } from './endpoints/auth/session/status';
 
 import { jwtAuthMiddleware } from './utils/middleware';
-import { TestReceiptImage } from './endpoints/test/receipt';
+import { TestReceiptImage } from './endpoints/test/ai-analysis';
 import { AdminSynapseTestUpload } from './endpoints/test/synapse';
 import { AdminSynapseSetup } from './endpoints/admin/synapse/setup';
-import { Synapse } from './services/synapse';
+import { ScanUploadReceipt } from './endpoints/scan/upload-receipt';
+import { ViewSynapseImage } from './endpoints/scan/view-synapse-image';
+import { ViewR2Image } from './endpoints/scan/view-r2-image';
+import { TestResizeImage } from './endpoints/test/resize';
+import { TestR2Upload } from './endpoints/test/r2';
 
 const v1Routes = fromHono(new Hono());
 
@@ -24,15 +28,15 @@ v1Routes.post('/auth/session/miniapp/complete', AuthSessionMiniappComplete);
 v1Routes.get('/auth/session/status', jwtAuthMiddleware, AuthSessionStatus as any);
 v1Routes.post('/auth/session/revoke', jwtAuthMiddleware, AuthSessionRevoke as any);
 
+v1Routes.post('/scan', ScanUploadReceipt as any);
+v1Routes.get('/scan/image/synapse/:pieceCid', ViewSynapseImage as any);
+v1Routes.get('/scan/image/r2/:key', ViewR2Image as any);
+
 v1Routes.post('/test-image', TestReceiptImage);
+v1Routes.get('/test-resize/:pieceCid', TestResizeImage as any);
+
+v1Routes.post('/admin/r2/test-upload', TestR2Upload);
 v1Routes.post('/admin/synapse/test-upload', AdminSynapseTestUpload);
 v1Routes.post('/admin/synapse/setup', AdminSynapseSetup);
-v1Routes.get('/synapse/file/:pieceCid', async (c) => {
-	const pieceCid = c.req.param('pieceCid');
-	const image = await Synapse.getImage(pieceCid);
 
-	return c.body(Buffer.from(image), 200, {
-		'Content-Type': 'image/jpeg',
-	});
-});
 export default v1Routes;

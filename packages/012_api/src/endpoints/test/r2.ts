@@ -4,11 +4,12 @@ import type { AppContext } from 'workers/types';
 import { ReceiptProcessor } from '../../services/receipt-processor';
 import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
 import { Synapse } from 'workers/services/synapse';
+import { R2 } from 'workers/utils/r2';
 
-export class AdminSynapseTestUpload extends OpenAPIRoute {
+export class TestR2Upload extends OpenAPIRoute {
 	schema = {
 		tags: ['Test'],
-		summary: 'Test Synapse Upload',
+		summary: 'Test R2 Upload',
 		security: [{ cookie: [] }],
 		request: {
 			body: {
@@ -33,40 +34,8 @@ export class AdminSynapseTestUpload extends OpenAPIRoute {
 				content: {
 					'application/json': {
 						schema: z.object({
-							pieceCid: z.string(),
-							size: z.number(),
-							pieceId: z.string(),
-						}),
-					},
-				},
-			},
-			'400': {
-				description: 'Bad Request',
-				content: {
-					'application/json': {
-						schema: z.object({
-							error: z.string(),
-						}),
-					},
-				},
-			},
-			'401': {
-				description: 'Unauthorized - Authentication required',
-				content: {
-					'application/json': {
-						schema: z.object({
-							code: z.literal('UNAUTHORIZED'),
-							error: z.string(),
-						}),
-					},
-				},
-			},
-			'500': {
-				description: 'Internal Server Error',
-				content: {
-					'application/json': {
-						schema: z.object({
-							error: z.string(),
+							url: z.string(),
+							key: z.string(),
 						}),
 					},
 				},
@@ -86,12 +55,12 @@ export class AdminSynapseTestUpload extends OpenAPIRoute {
 		const inputBytes = new Uint8Array(arrayBuffer);
 
 		try {
-			const { pieceCid, size, pieceId } = await Synapse.saveReceiptImage(inputBytes);
+			const { key } = await R2.saveReceiptImage(inputBytes);
 
-			return c.json({ pieceCid, size, pieceId });
+			return c.json({ key, url: `https://r2.receipto.humanlabs.world/${key}` });
 		} catch (error) {
-			console.error('Error saving receipt to Synapse:', error);
-			return c.json({ error: error instanceof Error ? error.message : 'Failed to save receipt to Synapse' }, 500);
+			console.error('Error saving receipt to R2:', error);
+			return c.json({ error: error instanceof Error ? error.message : 'Failed to save receipt to R2' }, 500);
 		}
 	}
 }

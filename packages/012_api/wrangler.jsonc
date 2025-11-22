@@ -16,6 +16,12 @@
       "id": "local"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "RECEIPT_R2_BUCKET",
+      "bucket_name": "receipto"
+    }
+  ],
   "env": {
     "staging": {
       "name": "receipto-api-staging",
@@ -31,6 +37,12 @@
         {
           "binding": "HYPERDRIVE",
           "id": "f7cffaabeb1e43588863d84548939423"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "RECEIPT_R2_BUCKET",
+          "bucket_name": "receipto",
         }
       ]
     },
@@ -48,6 +60,12 @@
         {
           "binding": "HYPERDRIVE",
           "id": "2cfcadaf728446aaaf350df0ef02705c"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "RECEIPT_R2_BUCKET",
+          "bucket_name": "receipto"
         }
       ]
     }

@@ -1,11 +1,9 @@
 import { SynapseConfig } from './config';
 
 export const Synapse = {
-	saveReceipt: async (file: File) => {
+	saveReceiptImage: async (image: Uint8Array<ArrayBufferLike>) => {
 		const storageContext = await SynapseConfig.getStorageContext();
-		const arrayBuffer = await file.arrayBuffer();
-		const inputBytes = new Uint8Array(arrayBuffer);
-		const { pieceCid, size, pieceId } = await storageContext.upload(inputBytes);
+		const { pieceCid, size, pieceId } = await storageContext.upload(image);
 
 		return { pieceCid, size, pieceId };
 	},
