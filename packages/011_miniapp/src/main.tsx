@@ -10,6 +10,10 @@ import Onboarding from './pages/Onboarding'
 import Rewards from './pages/Rewards'
 import './index.css'
 import './App.css'
+import { MiniKit } from '@worldcoin/minikit-js'
+
+// TODO: Remove this once we have a proper app ID
+MiniKit.install?.()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

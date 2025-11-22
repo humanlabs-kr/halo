@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import PageHeader from '../components/PageHeader'
 import ClaimSuccessModal from '../components/ClaimSuccessModal'
+import { sendLightImpactHaptic, sendSuccessNotificationHaptic } from '../components/hapticFeedback'
 
 type ReceiptStatus = 'pending' | 'rejected' | 'claimable' | 'claimed'
 
@@ -76,7 +77,7 @@ function History() {
 function ReadyCard({ claimablePoints, onClaim }: { claimablePoints: number; onClaim: () => void }) {
   const hasClaimable = claimablePoints > 0
   return (
-    <article className={`mt-5 flex items-center justify-between rounded-[28px] ${hasClaimable ? 'bg-[#E7F3FF]' : 'bg-[#F4F4F4]'} px-5 py-4.5`}>
+    <article className={`mt-5 pressed flex items-center justify-between rounded-[28px] ${hasClaimable ? 'bg-[#E7F3FF]' : 'bg-[#F4F4F4]'} px-5 py-4.5`}>
       <div>
         <p className="text-base font-semibold text-black">
           {hasClaimable ? 'Rewards ready to claim' : 'Ready to scan?'}
@@ -89,7 +90,10 @@ function ReadyCard({ claimablePoints, onClaim }: { claimablePoints: number; onCl
         <button
           type="button"
           className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90"
-          onClick={onClaim}
+          onClick={() => {
+            sendSuccessNotificationHaptic()
+            onClaim()
+          }}
         >
           Claim
         </button>
@@ -97,6 +101,7 @@ function ReadyCard({ claimablePoints, onClaim }: { claimablePoints: number; onCl
         <Link
           to="/camera-scan"
           className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90"
+          onClick={() => sendLightImpactHaptic()}
         >
           SCAN
         </Link>
@@ -126,7 +131,7 @@ function ReceiptCell({ item }: { item: ReceiptItem }) {
   const meta = statusMeta[item.status]
   if (item.status === 'pending') {
     return (
-      <article className="flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
         <div>
           <p className="text-base font-semibold text-black">{meta.label}</p>
           <p className="text-xs text-[#6C6C6C]">{item.timeAgo}</p>
@@ -138,7 +143,7 @@ function ReceiptCell({ item }: { item: ReceiptItem }) {
 
   if (item.status === 'rejected') {
     return (
-      <article className="flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
         <div className="flex items-center gap-3.5">
           <ScoreBadge score={0} />
           <div>
@@ -152,7 +157,7 @@ function ReceiptCell({ item }: { item: ReceiptItem }) {
   }
 
   return (
-    <article className="flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+    <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
       <div className="flex items-center gap-3.5">
       <ScoreBadge score={item.score} />
         <div className="space-y-1">

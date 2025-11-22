@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { setOnboardingCompleted } from "../utils/onboardingStorage";
+import { sendLightImpactHaptic } from "../components/hapticFeedback";
 
 type HistoryCard = {
   kind: "history";
@@ -95,7 +96,11 @@ const TRANSITION_DURATION = 0;
 const CARD_BASE_DELAY = 220;
 const CARD_DELAY_STEP = 130;
 
-function Onboarding() {
+type OnboardingProps = {
+  onClose?: () => void;
+};
+
+function Onboarding({ onClose }: OnboardingProps = {}) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(0);
   const [progressCycle, setProgressCycle] = useState(0);
@@ -179,8 +184,13 @@ function Onboarding() {
   };
 
   const handlePrimaryCTA = () => {
-    setOnboardingCompleted()
-    navigate("/home", { replace: true })
+    sendLightImpactHaptic();
+    if (onClose) {
+      onClose();
+    } else {
+      setOnboardingCompleted();
+      navigate("/home", { replace: true });
+    }
   }
 
   useEffect(() => {
@@ -222,7 +232,7 @@ function Onboarding() {
 
   return (
     <div
-      className="flex min-h-screen flex-col bg-[#E6F3FF] text-black"
+      className={`flex flex-col bg-[#E6F3FF] text-black ${onClose ? 'min-h-full' : 'min-h-screen'}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handleScreenClick}
@@ -315,8 +325,11 @@ function Onboarding() {
 
       </div>
 
-      {/* Bottom Button */}
-      <div className="px-4 pb-10.5">
+      {/* Bottom Button - Fixed */}
+      <div 
+        className="fixed left-0 right-0 z-40 px-4"
+        style={{ bottom: 42 }}
+      >
         <button
           type="button"
           onClick={handlePrimaryCTA}
@@ -325,6 +338,9 @@ function Onboarding() {
           Get Started
         </button>
       </div>
+      
+      {/* Spacer to prevent content from being hidden behind fixed button */}
+      <div className="h-24" />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import HumanPassLink from '../components/HumanPassLink'
 import { hasCompletedOnboarding } from '../utils/onboardingStorage'
+import { sendLightImpactHaptic } from '../components/hapticFeedback'
 
 function Login() {
   const navigate = useNavigate()
@@ -29,6 +30,7 @@ function Login() {
   }, [])
 
   const handleSignIn = () => {
+    sendLightImpactHaptic()
     if (hasCompletedOnboarding()) {
       navigate('/home')
       return

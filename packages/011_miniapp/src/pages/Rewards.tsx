@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
+import { sendLightImpactHaptic } from '../components/hapticFeedback'
 
 type DailyReward = {
   id: string
@@ -42,6 +43,14 @@ const raffleRewards: RaffleReward[] = [
 function Rewards() {
   const [remainingMs, setRemainingMs] = useState(INITIAL_COUNTDOWN)
 
+  const handleClaim = () => {
+    sendLightImpactHaptic()
+  }
+
+  const handleEnter = () => {
+    sendLightImpactHaptic()
+  }
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setRemainingMs((prev) => {
@@ -81,7 +90,7 @@ function Rewards() {
         />
         <div className="mt-3 space-y-2">
           {dailyRewards.map((reward) => (
-            <DailyRewardCard key={reward.id} reward={reward} />
+            <DailyRewardCard key={reward.id} reward={reward} handleClaim={handleClaim} />
           ))}
         </div>
 
@@ -93,7 +102,7 @@ function Rewards() {
         />
         <div className="mt-3 space-y-2">
           {raffleRewards.map((reward) => (
-            <RaffleRewardCard key={reward.id} reward={reward} />
+            <RaffleRewardCard key={reward.id} reward={reward} handleEnter={handleEnter} />
           ))}
         </div>
       </div>
@@ -158,7 +167,7 @@ function SectionHeading({
   )
 }
 
-function DailyRewardCard({ reward }: { reward: DailyReward }) {
+function DailyRewardCard({ reward, handleClaim }: { reward: DailyReward, handleClaim: () => void }) {
   const isPrimary = reward.status === 'claimable'
   const baseBg = isPrimary ? 'bg-[#E7F3FF]' : 'bg-[#F4F4F4]'
 
@@ -167,6 +176,7 @@ function DailyRewardCard({ reward }: { reward: DailyReward }) {
       <button
         type="button"
         className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white"
+        onClick={handleClaim}
       >
         Claim
       </button>
@@ -184,7 +194,7 @@ function DailyRewardCard({ reward }: { reward: DailyReward }) {
   }[reward.status]
 
   return (
-    <article className={`flex items-center justify-between rounded-[28px] px-5 py-4.5 ${baseBg}`}>
+    <article className={`pressed flex items-center justify-between rounded-[28px] px-5 py-4.5 ${baseBg}`}>
       <div>
         <p className="text-base font-semibold text-black">{reward.amountLabel}</p>
         <p className="text-xs text-[#8D8D8D]">{reward.pointsLabel}</p>
@@ -194,10 +204,10 @@ function DailyRewardCard({ reward }: { reward: DailyReward }) {
   )
 }
 
-function RaffleRewardCard({ reward }: { reward: RaffleReward }) {
+function RaffleRewardCard({ reward, handleEnter }: { reward: RaffleReward, handleEnter: () => void }) {
   const isDisabled = reward.status === 'closed'
   return (
-    <article className="flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+    <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
       <div>
         <p className="text-base font-semibold text-black">{reward.reward}</p>
         <p className="text-xs text-[#8D8D8D]">
@@ -213,6 +223,7 @@ function RaffleRewardCard({ reward }: { reward: RaffleReward }) {
         <button
           type="button"
           className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white"
+          onClick={handleEnter}
         >
           Enter
         </button>

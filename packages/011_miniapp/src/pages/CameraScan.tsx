@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { Drawer } from "vaul";
 import { useCameraStream } from "../hooks/useCameraStream";
 import ScanPendingModal from "../components/ScanPendingModal";
+import { sendLightImpactHaptic } from "../components/hapticFeedback";
 
 const TOTAL_STEPS = 5;
 // TODO: 5번 모두 받았으면 촬영 누를 때 토스트 뜨게하기
@@ -176,7 +177,10 @@ function CaptureButton({
         className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-white/10 disabled:opacity-40"
         aria-label="Capture"
         disabled={disabled}
-        onClick={onCapture}
+        onClick={() => {
+          sendLightImpactHaptic()
+          onCapture()
+        }}
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black">
           <img src="/fi_camera.svg" alt="Camera" className="h-5 w-5" />
