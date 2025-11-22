@@ -162,6 +162,46 @@ export type PostScanUploadReceipt400 = {
   message: string;
 };
 
+export type GetListReceipts200ListItemStatus =
+  (typeof GetListReceipts200ListItemStatus)[keyof typeof GetListReceipts200ListItemStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetListReceipts200ListItemStatus = {
+  pending: "pending",
+  rejected: "rejected",
+  claimable: "claimable",
+  claimed: "claimed",
+} as const;
+
+export type GetListReceipts200ListItemCreatedAt = string | null;
+
+export type GetListReceipts200ListItem = {
+  id: string;
+  merchantName: string;
+  status: GetListReceipts200ListItemStatus;
+  assignedPoint: number;
+  qualityRate: number;
+  createdAt: GetListReceipts200ListItemCreatedAt;
+};
+
+export type GetListReceipts200 = {
+  totalCount: number;
+  list: GetListReceipts200ListItem[];
+};
+
+export type GetListReceipts400Code =
+  (typeof GetListReceipts400Code)[keyof typeof GetListReceipts400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetListReceipts400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type GetListReceipts400 = {
+  code: GetListReceipts400Code;
+  message: string;
+};
+
 export type PostTestReceiptImageAnalysisBody = {
   file: Blob;
 };
@@ -324,14 +364,14 @@ export const getGetAuthSessionMiniappNonceUrl = () => {
 };
 
 export const getAuthSessionMiniappNonce = async (
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<getAuthSessionMiniappNonceResponse> => {
   return customFetch<getAuthSessionMiniappNonceResponse>(
     getGetAuthSessionMiniappNonceUrl(),
     {
       ...options,
       method: "GET",
-    }
+    },
   );
 };
 
@@ -367,7 +407,7 @@ export const getPostAuthSessionMiniappCompleteUrl = () => {
 
 export const postAuthSessionMiniappComplete = async (
   postAuthSessionMiniappCompleteBody: PostAuthSessionMiniappCompleteBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postAuthSessionMiniappCompleteResponse> => {
   return customFetch<postAuthSessionMiniappCompleteResponse>(
     getPostAuthSessionMiniappCompleteUrl(),
@@ -376,7 +416,7 @@ export const postAuthSessionMiniappComplete = async (
       method: "POST",
       headers: { "Content-Type": "application/json", ...options?.headers },
       body: JSON.stringify(postAuthSessionMiniappCompleteBody),
-    }
+    },
   );
 };
 
@@ -418,14 +458,14 @@ export const getGetAuthSessionStatusUrl = () => {
 };
 
 export const getAuthSessionStatus = async (
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<getAuthSessionStatusResponse> => {
   return customFetch<getAuthSessionStatusResponse>(
     getGetAuthSessionStatusUrl(),
     {
       ...options,
       method: "GET",
-    }
+    },
   );
 };
 
@@ -467,14 +507,14 @@ export const getPostAuthSessionRevokeUrl = () => {
 };
 
 export const postAuthSessionRevoke = async (
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postAuthSessionRevokeResponse> => {
   return customFetch<postAuthSessionRevokeResponse>(
     getPostAuthSessionRevokeUrl(),
     {
       ...options,
       method: "POST",
-    }
+    },
   );
 };
 
@@ -505,12 +545,12 @@ export type postScanUploadReceiptResponse =
   | postScanUploadReceiptResponseError;
 
 export const getPostScanUploadReceiptUrl = () => {
-  return `/v1/receipt`;
+  return `/v1/receipts`;
 };
 
 export const postScanUploadReceipt = async (
   postScanUploadReceiptBody: PostScanUploadReceiptBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postScanUploadReceiptResponse> => {
   const formData = new FormData();
   formData.append(`file`, postScanUploadReceiptBody.file);
@@ -521,8 +561,45 @@ export const postScanUploadReceipt = async (
       ...options,
       method: "POST",
       body: formData,
-    }
+    },
   );
+};
+
+/**
+ * @summary List receipts
+ */
+export type getListReceiptsResponse200 = {
+  data: GetListReceipts200;
+  status: 200;
+};
+
+export type getListReceiptsResponse400 = {
+  data: GetListReceipts400;
+  status: 400;
+};
+
+export type getListReceiptsResponseSuccess = getListReceiptsResponse200 & {
+  headers: Headers;
+};
+export type getListReceiptsResponseError = getListReceiptsResponse400 & {
+  headers: Headers;
+};
+
+export type getListReceiptsResponse =
+  | getListReceiptsResponseSuccess
+  | getListReceiptsResponseError;
+
+export const getGetListReceiptsUrl = () => {
+  return `/v1/receipts`;
+};
+
+export const getListReceipts = async (
+  options?: RequestInit,
+): Promise<getListReceiptsResponse> => {
+  return customFetch<getListReceiptsResponse>(getGetListReceiptsUrl(), {
+    ...options,
+    method: "GET",
+  });
 };
 
 export type getViewSynapseImageResponse200 = {
@@ -537,19 +614,19 @@ export type getViewSynapseImageResponseSuccess =
 export type getViewSynapseImageResponse = getViewSynapseImageResponseSuccess;
 
 export const getGetViewSynapseImageUrl = (receiptId: string) => {
-  return `/v1/receipt/${receiptId}/image/synapse`;
+  return `/v1/receipts/${receiptId}/image/synapse`;
 };
 
 export const getViewSynapseImage = async (
   receiptId: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<getViewSynapseImageResponse> => {
   return customFetch<getViewSynapseImageResponse>(
     getGetViewSynapseImageUrl(receiptId),
     {
       ...options,
       method: "GET",
-    }
+    },
   );
 };
 
@@ -564,12 +641,12 @@ export type getViewR2ImageResponseSuccess = getViewR2ImageResponse200 & {
 export type getViewR2ImageResponse = getViewR2ImageResponseSuccess;
 
 export const getGetViewR2ImageUrl = (receiptId: string) => {
-  return `/v1/receipt/${receiptId}/image/r2`;
+  return `/v1/receipts/${receiptId}/image/r2`;
 };
 
 export const getViewR2Image = async (
   receiptId: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<getViewR2ImageResponse> => {
   return customFetch<getViewR2ImageResponse>(getGetViewR2ImageUrl(receiptId), {
     ...options,
@@ -622,7 +699,7 @@ export const getPostTestReceiptImageAnalysisUrl = () => {
 
 export const postTestReceiptImageAnalysis = async (
   postTestReceiptImageAnalysisBody: PostTestReceiptImageAnalysisBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postTestReceiptImageAnalysisResponse> => {
   const formData = new FormData();
   formData.append(`file`, postTestReceiptImageAnalysisBody.file);
@@ -633,7 +710,7 @@ export const postTestReceiptImageAnalysis = async (
       ...options,
       method: "POST",
       body: formData,
-    }
+    },
   );
 };
 
@@ -656,7 +733,7 @@ export const getPostTestR2UploadUrl = () => {
 
 export const postTestR2Upload = async (
   postTestR2UploadBody: PostTestR2UploadBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postTestR2UploadResponse> => {
   const formData = new FormData();
   formData.append(`file`, postTestR2UploadBody.file);
@@ -713,7 +790,7 @@ export const getPostAdminSynapseTestUploadUrl = () => {
 
 export const postAdminSynapseTestUpload = async (
   postAdminSynapseTestUploadBody: PostAdminSynapseTestUploadBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postAdminSynapseTestUploadResponse> => {
   const formData = new FormData();
   formData.append(`file`, postAdminSynapseTestUploadBody.file);
@@ -724,7 +801,7 @@ export const postAdminSynapseTestUpload = async (
       ...options,
       method: "POST",
       body: formData,
-    }
+    },
   );
 };
 
@@ -749,7 +826,7 @@ export const getPostAdminSynapseSetupUrl = () => {
 
 export const postAdminSynapseSetup = async (
   postAdminSynapseSetupBody: PostAdminSynapseSetupBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postAdminSynapseSetupResponse> => {
   return customFetch<postAdminSynapseSetupResponse>(
     getPostAdminSynapseSetupUrl(),
@@ -758,7 +835,7 @@ export const postAdminSynapseSetup = async (
       method: "POST",
       headers: { "Content-Type": "application/json", ...options?.headers },
       body: JSON.stringify(postAdminSynapseSetupBody),
-    }
+    },
   );
 };
 
@@ -782,7 +859,7 @@ export const getPostAdminImpersonateUrl = () => {
 
 export const postAdminImpersonate = async (
   postAdminImpersonateBody: PostAdminImpersonateBody,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<postAdminImpersonateResponse> => {
   return customFetch<postAdminImpersonateResponse>(
     getPostAdminImpersonateUrl(),
@@ -791,6 +868,6 @@ export const postAdminImpersonate = async (
       method: "POST",
       headers: { "Content-Type": "application/json", ...options?.headers },
       body: JSON.stringify(postAdminImpersonateBody),
-    }
+    },
   );
 };

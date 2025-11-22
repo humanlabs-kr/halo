@@ -178,6 +178,46 @@ export type PostScanUploadReceipt400 = {
   message: string;
 };
 
+export type GetListReceipts200ListItemStatus =
+  (typeof GetListReceipts200ListItemStatus)[keyof typeof GetListReceipts200ListItemStatus];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetListReceipts200ListItemStatus = {
+  pending: "pending",
+  rejected: "rejected",
+  claimable: "claimable",
+  claimed: "claimed",
+} as const;
+
+export type GetListReceipts200ListItemCreatedAt = string | null;
+
+export type GetListReceipts200ListItem = {
+  id: string;
+  merchantName: string;
+  status: GetListReceipts200ListItemStatus;
+  assignedPoint: number;
+  qualityRate: number;
+  createdAt: GetListReceipts200ListItemCreatedAt;
+};
+
+export type GetListReceipts200 = {
+  totalCount: number;
+  list: GetListReceipts200ListItem[];
+};
+
+export type GetListReceipts400Code =
+  (typeof GetListReceipts400Code)[keyof typeof GetListReceipts400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetListReceipts400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type GetListReceipts400 = {
+  code: GetListReceipts400Code;
+  message: string;
+};
+
 export type PostTestReceiptImageAnalysisBody = {
   file: Blob;
 };
@@ -788,7 +828,7 @@ const postScanUploadReceipt = (
   formData.append(`file`, postScanUploadReceiptBody.file);
 
   return customInstance<PostScanUploadReceipt200>({
-    url: `/v1/receipt`,
+    url: `/v1/receipts`,
     method: "POST",
     headers: { "Content-Type": "multipart/form-data" },
     data: formData,
@@ -866,16 +906,159 @@ export const usePostScanUploadReceipt = <
   return useMutation(mutationOptions, queryClient);
 };
 
+/**
+ * @summary List receipts
+ */
+const getListReceipts = (signal?: AbortSignal) => {
+  return customInstance<GetListReceipts200>({
+    url: `/v1/receipts`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetListReceiptsQueryKey = () => {
+  return [`/v1/receipts`] as const;
+};
+
+export const getGetListReceiptsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getListReceipts>>,
+  TError = GetListReceipts400,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getListReceipts>>, TError, TData>
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetListReceiptsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getListReceipts>>> = ({
+    signal,
+  }) => getListReceipts(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getListReceipts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetListReceiptsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getListReceipts>>
+>;
+export type GetListReceiptsQueryError = GetListReceipts400;
+
+export function useGetListReceipts<
+  TData = Awaited<ReturnType<typeof getListReceipts>>,
+  TError = GetListReceipts400,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getListReceipts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getListReceipts>>,
+          TError,
+          Awaited<ReturnType<typeof getListReceipts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetListReceipts<
+  TData = Awaited<ReturnType<typeof getListReceipts>>,
+  TError = GetListReceipts400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getListReceipts>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getListReceipts>>,
+          TError,
+          Awaited<ReturnType<typeof getListReceipts>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetListReceipts<
+  TData = Awaited<ReturnType<typeof getListReceipts>>,
+  TError = GetListReceipts400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getListReceipts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary List receipts
+ */
+
+export function useGetListReceipts<
+  TData = Awaited<ReturnType<typeof getListReceipts>>,
+  TError = GetListReceipts400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getListReceipts>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetListReceiptsQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
 const getViewSynapseImage = (receiptId: string, signal?: AbortSignal) => {
   return customInstance<void>({
-    url: `/v1/receipt/${receiptId}/image/synapse`,
+    url: `/v1/receipts/${receiptId}/image/synapse`,
     method: "GET",
     signal,
   });
 };
 
 export const getGetViewSynapseImageQueryKey = (receiptId?: string) => {
-  return [`/v1/receipt/${receiptId}/image/synapse`] as const;
+  return [`/v1/receipts/${receiptId}/image/synapse`] as const;
 };
 
 export const getGetViewSynapseImageQueryOptions = <
@@ -1022,14 +1205,14 @@ export function useGetViewSynapseImage<
 
 const getViewR2Image = (receiptId: string, signal?: AbortSignal) => {
   return customInstance<void>({
-    url: `/v1/receipt/${receiptId}/image/r2`,
+    url: `/v1/receipts/${receiptId}/image/r2`,
     method: "GET",
     signal,
   });
 };
 
 export const getGetViewR2ImageQueryKey = (receiptId?: string) => {
-  return [`/v1/receipt/${receiptId}/image/r2`] as const;
+  return [`/v1/receipts/${receiptId}/image/r2`] as const;
 };
 
 export const getGetViewR2ImageQueryOptions = <

@@ -6,6 +6,8 @@ import ScanPendingModal from "../components/ScanPendingModal";
 import { sendLightImpactHaptic } from "../components/hapticFeedback";
 import { postScanUploadReceipt } from "@/lib/generated/fetch";
 import { callApi } from "@/lib/fetch-client";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetListReceiptsQueryKey } from "@/lib/generated/react-query";
 
 const TOTAL_STEPS = 5;
 // TODO: 5번 모두 받았으면 촬영 누를 때 토스트 뜨게하기
@@ -22,6 +24,8 @@ function CameraScan() {
       Array.from({ length: TOTAL_STEPS }, (_, index) => index < completedSteps),
     [completedSteps]
   );
+
+  const queryClient = useQueryClient();
 
   const handleCapture = () => {
     if (state !== "ready" || isReviewing) return;
@@ -48,7 +52,7 @@ function CameraScan() {
           }, "image/jpeg");
         });
       const file = await getFile();
-      const { data } = await callApi(
+      await callApi(
         postScanUploadReceipt,
         { file },
         {
@@ -57,15 +61,13 @@ function CameraScan() {
           },
         }
       );
-      console.log(data);
-      setTimeout(() => {
-        setCompletedSteps((prev) => Math.min(TOTAL_STEPS, prev + 1));
-        setIsReviewing(false);
-        setShowPopup(true);
-        if (videoRef.current) {
-          videoRef.current.pause();
-        }
-      }, 900);
+      queryClient.invalidateQueries({ queryKey: getGetListReceiptsQueryKey() });
+      setCompletedSteps((prev) => Math.min(TOTAL_STEPS, prev + 1));
+      setIsReviewing(false);
+      setShowPopup(true);
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
     });
   };
 
