@@ -35,6 +35,12 @@
         "max_batch_size": 1,
         "retry_delay": 10000,
         "max_concurrency": 1,
+      },
+      {
+        "queue": "receipto-dev-fluence-ocr",
+        "max_batch_size": 1,
+        "retry_delay": 10000,
+        "max_concurrency": 1,
       }
     ],
     "producers": [
@@ -45,6 +51,10 @@
       {
         "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
         "queue": "receipto-dev-synapse-upload"
+      },
+      {
+        "binding": "FLUENCE_OCR_QUEUE",
+        "queue": "receipto-dev-fluence-ocr",
       }
     ]
   },
@@ -84,6 +94,12 @@
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 1,
+          },
+          {
+            "queue": "receipto-staging-fluence-ocr",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1,
           }
         ],
         "producers": [
@@ -94,6 +110,10 @@
           {
             "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
             "queue": "receipto-staging-synapse-upload"
+          },
+          {
+            "binding": "FLUENCE_OCR_QUEUE",
+            "queue": "receipto-staging-fluence-ocr",
           }
         ]
       },
@@ -133,6 +153,12 @@
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 1,
+          },
+          {
+            "queue": "receipto-fluence-ocr",
+            "max_batch_size": 1,
+            "retry_delay": 10000,
+            "max_concurrency": 1,
           }
         ],
         "producers": [
@@ -143,6 +169,10 @@
           {
             "binding": "RECEIPT_SYNAPSE_UPLOAD_QUEUE",
             "queue": "receipto-synapse-upload"
+          },
+          {
+            "binding": "FLUENCE_OCR_QUEUE",
+            "queue": "receipto-fluence-ocr",
           }
         ]
       },

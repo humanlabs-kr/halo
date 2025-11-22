@@ -15,12 +15,12 @@ const openai = new OpenAI({
 
 export const ReceiptProcessor = {
 	normalizeImage: normalizeReceiptImage,
-	process: async (imageBytes: Uint8Array<ArrayBufferLike>) => {
-		// Convert to base64
-		const buffer = Buffer.from(imageBytes);
-		const base64Image = buffer.toString('base64').replace(/\s/g, '');
+	process: async (imageBytesArray: Uint8Array<ArrayBufferLike>[]) => {
+		const base64Images = imageBytesArray.map((imageBytes) => {
+			const buffer = Buffer.from(imageBytes);
+			return buffer.toString('base64').replace(/\s/g, '');
+		});
 
-		console.log(base64Image.slice(0, 100));
 		try {
 			const completion = await openai.chat.completions.create({
 				model: 'gpt-5-nano',
@@ -149,13 +149,13 @@ If ANY of the following is true:
                 If any required field cannot be extracted, return null for that field.
                 `,
 							},
-							{
-								type: 'image_url',
+							...base64Images.map((base64Image) => ({
+								type: 'image_url' as const,
 								image_url: {
 									url: `data:image/jpeg;base64,${base64Image}`,
-									detail: 'auto',
+									detail: 'auto' as const,
 								},
-							},
+							})),
 						],
 					},
 				],

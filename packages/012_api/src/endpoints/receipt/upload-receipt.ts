@@ -3,11 +3,10 @@ import { z } from 'zod';
 import type { AppContext } from 'workers/types';
 import { ReceiptProcessor } from '../../services/receipt-processor';
 import { R2 } from 'workers/utils/r2';
-import { Synapse } from 'workers/services/synapse';
 import { waitUntil } from 'cloudflare:workers';
-import { eq, receiptImages, receipts } from '@hl/database';
+import { receiptImages, receipts } from '@hl/database';
 import { randomUUID } from 'crypto';
-import { ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queue';
+import { FluenceOcrQueue, ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queues';
 
 export class ScanUploadReceipt extends OpenAPIRoute {
 	schema = {
@@ -53,7 +52,6 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 	};
 
 	async handle(c: AppContext) {
-		const data = await this.getValidatedData<typeof this.schema>();
 		const userAddress = c.get('address');
 		// TODO check if user can upload receipt
 
@@ -94,15 +92,7 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 		const inputBytes = new Uint8Array(arrayBuffer);
 		const normalizedImage = ReceiptProcessor.normalizeImage(inputBytes);
 
-		const r2ImageResult = await R2.saveReceiptImage(normalizedImage);
-
-		await c
-			.get('db')
-			.update(receiptImages)
-			.set({
-				r2Key: r2ImageResult.key,
-			})
-			.where(eq(receiptImages.id, receiptImageIds[0]));
+		await R2.saveReceiptImage(normalizedImage, receiptImageIds[0]);
 
 		// Send to queue for AI
 		waitUntil(
@@ -118,34 +108,15 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 			}),
 		);
 
+		// send to queue for fluence OCR, (for fluence OCR, iterate over each receipt image ids)
+		waitUntil(
+			FluenceOcrQueue.send({
+				receiptImageId: receiptImageIds[0],
+			}),
+		);
+
 		return c.json({
 			result: 'success',
 		});
-
-		// try {
-		// 	// Get image bytes
-
-		// 	waitUntil(
-		// 		(async () => {
-		// 			const synapseImageResult = await Synapse.saveReceiptImage(normalizedImage);
-		// 			// TODO save pieceCid to database
-		// 			console.log('synapseImageResult', synapseImageResult);
-		// 		})(),
-		// 	);
-
-		// 	waitUntil(
-		// 		(async () => {
-		// 			const receiptData = await ReceiptProcessor.process(normalizedImage);
-		// 			console.log('receiptData', receiptData);
-		// 		})(),
-		// 	);
-
-		// 	return c.json({
-		// 		result: 'success',
-		// 	});
-		// } catch (error) {
-		// 	console.error('Error processing receipt:', error);
-		// 	return c.json({ error: error instanceof Error ? error.message : 'Failed to process receipt' }, 500);
-		// }
 	}
 }

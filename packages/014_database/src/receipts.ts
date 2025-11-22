@@ -26,6 +26,12 @@ export const receipts = schema.table("receipts", {
   paymentMethod: text("payment_method"),
   qualityRate: integer("quality_rate"),
 
+  analysisStartedAt: timestamp("analysis_started_at", { withTimezone: true }),
+  analysisCompletedAt: timestamp("analysis_completed_at", {
+    withTimezone: true,
+  }),
+  analysisError: text("analysis_error"),
+
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

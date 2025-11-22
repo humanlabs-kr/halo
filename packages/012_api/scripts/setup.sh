@@ -1,17 +1,23 @@
 #!/bin/bash
 
-# # Check if queue exists before creating
-# if ! npx wrangler queues list | grep -q "review-analysis"; then
-#     npx wrangler queues create review-analysis
-# else
-#     echo "Queue 'review-analysis' already exists, skipping creation"
-# fi
+# Check if queue exists before creating
+if ! npx wrangler queues list | grep -q "receipto-dev-receipt-analysis"; then
+    npx wrangler queues create receipto-dev-receipt-analysis
+else
+    echo "Queue 'receipto-dev-receipt-analysis' already exists, skipping creation"
+fi
 
-# if ! npx wrangler queues list | grep -q "sync-review"; then
-#     npx wrangler queues create sync-review
-# else
-#     echo "Queue 'sync-review' already exists, skipping creation"
-# fi
+if ! npx wrangler queues list | grep -q "receipto-dev-synapse-upload"; then
+    npx wrangler queues create receipto-dev-synapse-upload
+else
+    echo "Queue 'receipto-dev-synapse-upload' already exists, skipping creation"
+fi
+
+if ! npx wrangler queues list | grep -q "receipto-dev-fluence-ocr"; then
+    npx wrangler queues create receipto-dev-fluence-ocr
+else
+    echo "Queue 'receipto-dev-fluence-ocr' already exists, skipping creation"
+fi
 
 # if ! npx wrangler queues list | grep -q "review-comment-gen"; then
 #     npx wrangler queues create review-comment-gen
