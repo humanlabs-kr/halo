@@ -1,4 +1,3 @@
-CREATE SCHEMA "receipto";
 --> statement-breakpoint
 CREATE TABLE "receipto"."users" (
 	"address" varchar(255) PRIMARY KEY NOT NULL,
