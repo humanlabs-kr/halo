@@ -10,6 +10,7 @@ import { schema } from "./schema";
 import { users } from "./users";
 import { relations } from "drizzle-orm";
 import { receiptImages } from "./receipt-images";
+import { pointLogs } from "./point-logs";
 
 export const receipts = schema.table("receipts", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -31,6 +32,10 @@ export const receipts = schema.table("receipts", {
     withTimezone: true,
   }),
   analysisError: text("analysis_error"),
+
+  pointLogId: uuid("point_log_id").references(() => pointLogs.id, {
+    onDelete: "restrict",
+  }),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

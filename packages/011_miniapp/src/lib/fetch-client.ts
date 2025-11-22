@@ -6,9 +6,13 @@ const getUrl = (contextUrl: string): string => {
 };
 
 const getHeaders = (headers?: HeadersInit): HeadersInit => {
+  if (headers?.["Content-Type"] === "multipart/form-data") {
+    delete headers["Content-Type"];
+    return headers;
+  }
   return {
-    ...headers,
     "Content-Type": "application/json",
+    ...headers,
   };
 };
 
@@ -47,7 +51,7 @@ export const customFetch = async <T>(
 
 export const callApi = async <
   T extends (...args: unknown[]) => Promise<{ status: number; data: unknown }>,
-  Response = Awaited<ReturnType<T>>
+  Response = Awaited<ReturnType<T>>,
 >(
   fn: T,
   ...args: Parameters<T>
@@ -57,8 +61,8 @@ export const callApi = async <
     Response extends { status: 200 }
       ? never
       : Response extends { data: infer E }
-      ? E
-      : never
+        ? E
+        : never
   >
 > => {
   try {
@@ -79,8 +83,8 @@ export const callApi = async <
         error: response.data as Response extends { status: 200 }
           ? never
           : Response extends { data: infer E }
-          ? E
-          : never,
+            ? E
+            : never,
       };
     }
   } catch (error) {

@@ -178,70 +178,70 @@ export type PostScanUploadReceipt400 = {
   message: string;
 };
 
-export type PostTestReceiptImageBody = {
+export type PostTestReceiptImageAnalysisBody = {
   file: Blob;
 };
 
-export type PostTestReceiptImage200MerchantAddress = string | null;
+export type PostTestReceiptImageAnalysis200MerchantAddress = string | null;
 
-export type PostTestReceiptImage200TransactionDate = string | null;
+export type PostTestReceiptImageAnalysis200TransactionDate = string | null;
 
-export type PostTestReceiptImage200TransactionTime = string | null;
+export type PostTestReceiptImageAnalysis200TransactionTime = string | null;
 
-export type PostTestReceiptImage200TaxAmount = number | null;
+export type PostTestReceiptImageAnalysis200TaxAmount = number | null;
 
-export type PostTestReceiptImage200Subtotal = number | null;
+export type PostTestReceiptImageAnalysis200Subtotal = number | null;
 
-export type PostTestReceiptImage200ItemsItemQuantity = number | null;
+export type PostTestReceiptImageAnalysis200ItemsItemQuantity = number | null;
 
-export type PostTestReceiptImage200ItemsItemUnitPrice = number | null;
+export type PostTestReceiptImageAnalysis200ItemsItemUnitPrice = number | null;
 
-export type PostTestReceiptImage200ItemsItem = {
+export type PostTestReceiptImageAnalysis200ItemsItem = {
   name: string;
-  quantity?: PostTestReceiptImage200ItemsItemQuantity;
-  unitPrice?: PostTestReceiptImage200ItemsItemUnitPrice;
+  quantity?: PostTestReceiptImageAnalysis200ItemsItemQuantity;
+  unitPrice?: PostTestReceiptImageAnalysis200ItemsItemUnitPrice;
   totalPrice: number;
 };
 
-export type PostTestReceiptImage200PaymentMethod = string | null;
+export type PostTestReceiptImageAnalysis200PaymentMethod = string | null;
 
-export type PostTestReceiptImage200ReceiptNumber = string | null;
+export type PostTestReceiptImageAnalysis200ReceiptNumber = string | null;
 
-export type PostTestReceiptImage200Notes = string | null;
+export type PostTestReceiptImageAnalysis200Notes = string | null;
 
-export type PostTestReceiptImage200 = {
+export type PostTestReceiptImageAnalysis200 = {
   merchantName: string;
-  merchantAddress?: PostTestReceiptImage200MerchantAddress;
-  transactionDate?: PostTestReceiptImage200TransactionDate;
-  transactionTime?: PostTestReceiptImage200TransactionTime;
+  merchantAddress?: PostTestReceiptImageAnalysis200MerchantAddress;
+  transactionDate?: PostTestReceiptImageAnalysis200TransactionDate;
+  transactionTime?: PostTestReceiptImageAnalysis200TransactionTime;
   totalAmount: number;
   currency: string;
-  taxAmount?: PostTestReceiptImage200TaxAmount;
-  subtotal?: PostTestReceiptImage200Subtotal;
-  items: PostTestReceiptImage200ItemsItem[];
-  paymentMethod?: PostTestReceiptImage200PaymentMethod;
-  receiptNumber?: PostTestReceiptImage200ReceiptNumber;
-  notes?: PostTestReceiptImage200Notes;
+  taxAmount?: PostTestReceiptImageAnalysis200TaxAmount;
+  subtotal?: PostTestReceiptImageAnalysis200Subtotal;
+  items: PostTestReceiptImageAnalysis200ItemsItem[];
+  paymentMethod?: PostTestReceiptImageAnalysis200PaymentMethod;
+  receiptNumber?: PostTestReceiptImageAnalysis200ReceiptNumber;
+  notes?: PostTestReceiptImageAnalysis200Notes;
 };
 
-export type PostTestReceiptImage400 = {
+export type PostTestReceiptImageAnalysis400 = {
   error: string;
 };
 
-export type PostTestReceiptImage401Code =
-  (typeof PostTestReceiptImage401Code)[keyof typeof PostTestReceiptImage401Code];
+export type PostTestReceiptImageAnalysis401Code =
+  (typeof PostTestReceiptImageAnalysis401Code)[keyof typeof PostTestReceiptImageAnalysis401Code];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const PostTestReceiptImage401Code = {
+export const PostTestReceiptImageAnalysis401Code = {
   UNAUTHORIZED: "UNAUTHORIZED",
 } as const;
 
-export type PostTestReceiptImage401 = {
-  code: PostTestReceiptImage401Code;
+export type PostTestReceiptImageAnalysis401 = {
+  code: PostTestReceiptImageAnalysis401Code;
   error: string;
 };
 
-export type PostTestReceiptImage500 = {
+export type PostTestReceiptImageAnalysis500 = {
   error: string;
 };
 
@@ -291,6 +291,22 @@ export type PostAdminSynapseSetupBody = {
 
 export type PostAdminSynapseSetup200 = {
   success: boolean;
+};
+
+export type PostAdminImpersonateBody = {
+  address: string;
+};
+
+export type PostAdminImpersonate200Result =
+  (typeof PostAdminImpersonate200Result)[keyof typeof PostAdminImpersonate200Result];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostAdminImpersonate200Result = {
+  success: "success",
+} as const;
+
+export type PostAdminImpersonate200 = {
+  result: PostAdminImpersonate200Result;
 };
 
 /**
@@ -1141,15 +1157,15 @@ export function useGetViewR2Image<
 /**
  * @summary Test receipt image analysis
  */
-const postTestReceiptImage = (
-  postTestReceiptImageBody: PostTestReceiptImageBody,
+const postTestReceiptImageAnalysis = (
+  postTestReceiptImageAnalysisBody: PostTestReceiptImageAnalysisBody,
   signal?: AbortSignal,
 ) => {
   const formData = new FormData();
-  formData.append(`file`, postTestReceiptImageBody.file);
+  formData.append(`file`, postTestReceiptImageAnalysisBody.file);
 
-  return customInstance<PostTestReceiptImage200>({
-    url: `/v1/test-image`,
+  return customInstance<PostTestReceiptImageAnalysis200>({
+    url: `/v1/admin/test/image-analysis`,
     method: "POST",
     headers: { "Content-Type": "multipart/form-data" },
     data: formData,
@@ -1157,26 +1173,26 @@ const postTestReceiptImage = (
   });
 };
 
-export const getPostTestReceiptImageMutationOptions = <
+export const getPostTestReceiptImageAnalysisMutationOptions = <
   TError =
-    | PostTestReceiptImage400
-    | PostTestReceiptImage401
-    | PostTestReceiptImage500,
+    | PostTestReceiptImageAnalysis400
+    | PostTestReceiptImageAnalysis401
+    | PostTestReceiptImageAnalysis500,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
-    Awaited<ReturnType<typeof postTestReceiptImage>>,
+    Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>,
     TError,
-    { data: PostTestReceiptImageBody },
+    { data: PostTestReceiptImageAnalysisBody },
     TContext
   >;
 }): UseMutationOptions<
-  Awaited<ReturnType<typeof postTestReceiptImage>>,
+  Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>,
   TError,
-  { data: PostTestReceiptImageBody },
+  { data: PostTestReceiptImageAnalysisBody },
   TContext
 > => {
-  const mutationKey = ["postTestReceiptImage"];
+  const mutationKey = ["postTestReceiptImageAnalysis"];
   const { mutation: mutationOptions } = options
     ? options.mutation &&
       "mutationKey" in options.mutation &&
@@ -1186,209 +1202,57 @@ export const getPostTestReceiptImageMutationOptions = <
     : { mutation: { mutationKey } };
 
   const mutationFn: MutationFunction<
-    Awaited<ReturnType<typeof postTestReceiptImage>>,
-    { data: PostTestReceiptImageBody }
+    Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>,
+    { data: PostTestReceiptImageAnalysisBody }
   > = (props) => {
     const { data } = props ?? {};
 
-    return postTestReceiptImage(data);
+    return postTestReceiptImageAnalysis(data);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
-export type PostTestReceiptImageMutationResult = NonNullable<
-  Awaited<ReturnType<typeof postTestReceiptImage>>
+export type PostTestReceiptImageAnalysisMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>
 >;
-export type PostTestReceiptImageMutationBody = PostTestReceiptImageBody;
-export type PostTestReceiptImageMutationError =
-  | PostTestReceiptImage400
-  | PostTestReceiptImage401
-  | PostTestReceiptImage500;
+export type PostTestReceiptImageAnalysisMutationBody =
+  PostTestReceiptImageAnalysisBody;
+export type PostTestReceiptImageAnalysisMutationError =
+  | PostTestReceiptImageAnalysis400
+  | PostTestReceiptImageAnalysis401
+  | PostTestReceiptImageAnalysis500;
 
 /**
  * @summary Test receipt image analysis
  */
-export const usePostTestReceiptImage = <
+export const usePostTestReceiptImageAnalysis = <
   TError =
-    | PostTestReceiptImage400
-    | PostTestReceiptImage401
-    | PostTestReceiptImage500,
+    | PostTestReceiptImageAnalysis400
+    | PostTestReceiptImageAnalysis401
+    | PostTestReceiptImageAnalysis500,
   TContext = unknown,
 >(
   options?: {
     mutation?: UseMutationOptions<
-      Awaited<ReturnType<typeof postTestReceiptImage>>,
+      Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>,
       TError,
-      { data: PostTestReceiptImageBody },
+      { data: PostTestReceiptImageAnalysisBody },
       TContext
     >;
   },
   queryClient?: QueryClient,
 ): UseMutationResult<
-  Awaited<ReturnType<typeof postTestReceiptImage>>,
+  Awaited<ReturnType<typeof postTestReceiptImageAnalysis>>,
   TError,
-  { data: PostTestReceiptImageBody },
+  { data: PostTestReceiptImageAnalysisBody },
   TContext
 > => {
-  const mutationOptions = getPostTestReceiptImageMutationOptions(options);
+  const mutationOptions =
+    getPostTestReceiptImageAnalysisMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };
-
-const getTestResizeImage = (pieceCid: string, signal?: AbortSignal) => {
-  return customInstance<void>({
-    url: `/v1/test-resize/${pieceCid}`,
-    method: "GET",
-    signal,
-  });
-};
-
-export const getGetTestResizeImageQueryKey = (pieceCid?: string) => {
-  return [`/v1/test-resize/${pieceCid}`] as const;
-};
-
-export const getGetTestResizeImageQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
-  TError = unknown,
->(
-  pieceCid: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTestResizeImage>>,
-        TError,
-        TData
-      >
-    >;
-  },
-) => {
-  const { query: queryOptions } = options ?? {};
-
-  const queryKey =
-    queryOptions?.queryKey ?? getGetTestResizeImageQueryKey(pieceCid);
-
-  const queryFn: QueryFunction<
-    Awaited<ReturnType<typeof getTestResizeImage>>
-  > = ({ signal }) => getTestResizeImage(pieceCid, signal);
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: !!pieceCid,
-    ...queryOptions,
-  } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTestResizeImage>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetTestResizeImageQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTestResizeImage>>
->;
-export type GetTestResizeImageQueryError = unknown;
-
-export function useGetTestResizeImage<
-  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
-  TError = unknown,
->(
-  pieceCid: string,
-  options: {
-    query: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTestResizeImage>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTestResizeImage>>,
-          TError,
-          Awaited<ReturnType<typeof getTestResizeImage>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTestResizeImage<
-  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
-  TError = unknown,
->(
-  pieceCid: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTestResizeImage>>,
-        TError,
-        TData
-      >
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTestResizeImage>>,
-          TError,
-          Awaited<ReturnType<typeof getTestResizeImage>>
-        >,
-        "initialData"
-      >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-export function useGetTestResizeImage<
-  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
-  TError = unknown,
->(
-  pieceCid: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTestResizeImage>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-};
-
-export function useGetTestResizeImage<
-  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
-  TError = unknown,
->(
-  pieceCid: string,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<
-        Awaited<ReturnType<typeof getTestResizeImage>>,
-        TError,
-        TData
-      >
-    >;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & {
-  queryKey: DataTag<QueryKey, TData, TError>;
-} {
-  const queryOptions = getGetTestResizeImageQueryOptions(pieceCid, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
-    TData,
-    TError
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-
-  query.queryKey = queryOptions.queryKey;
-
-  return query;
-}
 
 /**
  * @summary Test R2 Upload
@@ -1401,7 +1265,7 @@ const postTestR2Upload = (
   formData.append(`file`, postTestR2UploadBody.file);
 
   return customInstance<PostTestR2Upload200>({
-    url: `/v1/admin/r2/test-upload`,
+    url: `/v1/admin/test/r2-upload`,
     method: "POST",
     headers: { "Content-Type": "multipart/form-data" },
     data: formData,
@@ -1487,7 +1351,7 @@ const postAdminSynapseTestUpload = (
   formData.append(`file`, postAdminSynapseTestUploadBody.file);
 
   return customInstance<PostAdminSynapseTestUpload200>({
-    url: `/v1/admin/synapse/test-upload`,
+    url: `/v1/admin/test/synapse-upload`,
     method: "POST",
     headers: { "Content-Type": "multipart/form-data" },
     data: formData,
@@ -1654,6 +1518,89 @@ export const usePostAdminSynapseSetup = <TError = unknown, TContext = unknown>(
   TContext
 > => {
   const mutationOptions = getPostAdminSynapseSetupMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Impersonate a user
+ */
+const postAdminImpersonate = (
+  postAdminImpersonateBody: PostAdminImpersonateBody,
+  signal?: AbortSignal,
+) => {
+  return customInstance<PostAdminImpersonate200>({
+    url: `/v1/admin/test/impersonate`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: postAdminImpersonateBody,
+    signal,
+  });
+};
+
+export const getPostAdminImpersonateMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postAdminImpersonate>>,
+    TError,
+    { data: PostAdminImpersonateBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postAdminImpersonate>>,
+  TError,
+  { data: PostAdminImpersonateBody },
+  TContext
+> => {
+  const mutationKey = ["postAdminImpersonate"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postAdminImpersonate>>,
+    { data: PostAdminImpersonateBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postAdminImpersonate(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostAdminImpersonateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postAdminImpersonate>>
+>;
+export type PostAdminImpersonateMutationBody = PostAdminImpersonateBody;
+export type PostAdminImpersonateMutationError = unknown;
+
+/**
+ * @summary Impersonate a user
+ */
+export const usePostAdminImpersonate = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postAdminImpersonate>>,
+      TError,
+      { data: PostAdminImpersonateBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postAdminImpersonate>>,
+  TError,
+  { data: PostAdminImpersonateBody },
+  TContext
+> => {
+  const mutationOptions = getPostAdminImpersonateMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

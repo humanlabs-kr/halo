@@ -4,6 +4,8 @@ import { Drawer } from "vaul";
 import { useCameraStream } from "../hooks/useCameraStream";
 import ScanPendingModal from "../components/ScanPendingModal";
 import { sendLightImpactHaptic } from "../components/hapticFeedback";
+import { postScanUploadReceipt } from "@/lib/generated/fetch";
+import { callApi } from "@/lib/fetch-client";
 
 const TOTAL_STEPS = 5;
 // TODO: 5번 모두 받았으면 촬영 누를 때 토스트 뜨게하기
@@ -26,7 +28,36 @@ function CameraScan() {
     if (!videoRef.current || videoRef.current.readyState < 2) return;
 
     setIsReviewing(true);
-    capturePhoto(videoRef, () => {
+    capturePhoto(videoRef, async () => {
+      // Take a snapshot from the video and create a File object ("receipt.jpg")
+      const canvas = document.createElement("canvas");
+      const video = videoRef.current!;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Convert canvas to blob and create a File
+      const getFile = () =>
+        new Promise<File>((resolve, reject) => {
+          canvas.toBlob((blob) => {
+            if (blob) {
+              resolve(new File([blob], "receipt.jpg", { type: "image/jpeg" }));
+            } else {
+              reject(new Error("Failed to capture image"));
+            }
+          }, "image/jpeg");
+        });
+      const file = await getFile();
+      const { data } = await callApi(
+        postScanUploadReceipt,
+        { file },
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      console.log(data);
       setTimeout(() => {
         setCompletedSteps((prev) => Math.min(TOTAL_STEPS, prev + 1));
         setIsReviewing(false);
@@ -42,7 +73,7 @@ function CameraScan() {
     setShowPopup(false);
     if (videoRef.current && videoRef.current.paused) {
       videoRef.current.play().catch((err) => {
-        console.warn('Video play error after modal close:', err);
+        console.warn("Video play error after modal close:", err);
       });
     }
   };
@@ -50,10 +81,7 @@ function CameraScan() {
   return (
     <div className="flex min-h-screen justify-center bg-black text-white">
       <div className="relative flex min-h-screen w-full flex-col px-4 pt-4 pb-12">
-        <ScannerFrame
-          videoRef={videoRef}
-          state={state}
-        />
+        <ScannerFrame videoRef={videoRef} state={state} />
 
         <div className="relative z-10 flex flex-1 flex-col">
           <Header onClose={() => navigate(-1)} />
@@ -178,8 +206,8 @@ function CaptureButton({
         aria-label="Capture"
         disabled={disabled}
         onClick={() => {
-          sendLightImpactHaptic()
-          onCapture()
+          sendLightImpactHaptic();
+          onCapture();
         }}
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black">

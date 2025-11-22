@@ -6,3 +6,5 @@ export * from "./schema";
 export * from "./users";
 export * from "./receipts";
 export * from "./receipt-images";
+export * from "./point-logs";
+export * from "./point-claims";
