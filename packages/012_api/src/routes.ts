@@ -15,6 +15,7 @@ import { jwtAuthMiddleware } from './utils/middleware';
 import { TestReceiptImage } from './endpoints/test/receipt';
 import { AdminSynapseTestUpload } from './endpoints/test/synapse';
 import { AdminSynapseSetup } from './endpoints/admin/synapse/setup';
+import { Synapse } from './services/synapse';
 
 const v1Routes = fromHono(new Hono());
 
@@ -26,4 +27,12 @@ v1Routes.post('/auth/session/revoke', jwtAuthMiddleware, AuthSessionRevoke as an
 v1Routes.post('/test-image', TestReceiptImage);
 v1Routes.post('/admin/synapse/test-upload', AdminSynapseTestUpload);
 v1Routes.post('/admin/synapse/setup', AdminSynapseSetup);
+v1Routes.get('/synapse/file/:pieceCid', async (c) => {
+	const pieceCid = c.req.param('pieceCid');
+	const image = await Synapse.getImage(pieceCid);
+
+	return c.body(Buffer.from(image), 200, {
+		'Content-Type': 'image/jpeg',
+	});
+});
 export default v1Routes;

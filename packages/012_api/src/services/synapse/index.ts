@@ -9,4 +9,9 @@ export const Synapse = {
 
 		return { pieceCid, size, pieceId };
 	},
+	getImage: async (pieceCid: string) => {
+		const storageContext = await SynapseConfig.getStorageContext();
+		const image = await storageContext.download(pieceCid);
+		return image;
+	},
 };
