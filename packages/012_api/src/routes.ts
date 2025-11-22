@@ -15,9 +15,9 @@ import { jwtAuthMiddleware } from './utils/middleware';
 import { TestReceiptImage } from './endpoints/test/ai-analysis';
 import { AdminSynapseTestUpload } from './endpoints/test/synapse';
 import { AdminSynapseSetup } from './endpoints/admin/synapse/setup';
-import { ScanUploadReceipt } from './endpoints/scan/upload-receipt';
-import { ViewSynapseImage } from './endpoints/scan/view-synapse-image';
-import { ViewR2Image } from './endpoints/scan/view-r2-image';
+import { ScanUploadReceipt } from './endpoints/receipt/upload-receipt';
+import { ViewSynapseImage } from './endpoints/receipt/view-synapse-image';
+import { ViewR2Image } from './endpoints/receipt/view-r2-image';
 import { TestResizeImage } from './endpoints/test/resize';
 import { TestR2Upload } from './endpoints/test/r2';
 
@@ -28,9 +28,9 @@ v1Routes.post('/auth/session/miniapp/complete', AuthSessionMiniappComplete);
 v1Routes.get('/auth/session/status', jwtAuthMiddleware, AuthSessionStatus as any);
 v1Routes.post('/auth/session/revoke', jwtAuthMiddleware, AuthSessionRevoke as any);
 
-v1Routes.post('/scan', ScanUploadReceipt as any);
-v1Routes.get('/scan/image/synapse/:pieceCid', ViewSynapseImage as any);
-v1Routes.get('/scan/image/r2/:key', ViewR2Image as any);
+v1Routes.post('/receipt', jwtAuthMiddleware, ScanUploadReceipt as any);
+v1Routes.get('/receipt/:receiptId/image/synapse', ViewSynapseImage as any);
+v1Routes.get('/receipt/:receiptId/image/r2', ViewR2Image as any);
 
 v1Routes.post('/test-image', TestReceiptImage);
 v1Routes.get('/test-resize/:pieceCid', TestResizeImage as any);

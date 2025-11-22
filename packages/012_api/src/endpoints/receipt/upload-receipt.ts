@@ -2,14 +2,9 @@ import { OpenAPIRoute, contentJson } from 'chanfana';
 import { z } from 'zod';
 import type { AppContext } from 'workers/types';
 import { ReceiptProcessor } from '../../services/receipt-processor';
-import { PhotonImage, resize, SamplingFilter } from '@cf-wasm/photon/workerd';
 import { R2 } from 'workers/utils/r2';
 import { Synapse } from 'workers/services/synapse';
 import { waitUntil } from 'cloudflare:workers';
-import { receiptR2Images } from '@hl/database';
-
-const MAX_LONG_EDGE = 1280;
-const JPEG_QUALITY = 0.75;
 
 export class ScanUploadReceipt extends OpenAPIRoute {
 	schema = {

@@ -149,6 +149,150 @@ export type PostAuthSessionRevoke401 = {
   message: string;
 };
 
+export type PostScanUploadReceiptBody = {
+  file: Blob;
+};
+
+export type PostScanUploadReceipt200Result =
+  (typeof PostScanUploadReceipt200Result)[keyof typeof PostScanUploadReceipt200Result];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostScanUploadReceipt200Result = {
+  success: "success",
+} as const;
+
+export type PostScanUploadReceipt200 = {
+  result: PostScanUploadReceipt200Result;
+};
+
+export type PostScanUploadReceipt400Code =
+  (typeof PostScanUploadReceipt400Code)[keyof typeof PostScanUploadReceipt400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostScanUploadReceipt400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type PostScanUploadReceipt400 = {
+  code: PostScanUploadReceipt400Code;
+  message: string;
+};
+
+export type PostTestReceiptImageBody = {
+  file: Blob;
+};
+
+export type PostTestReceiptImage200MerchantAddress = string | null;
+
+export type PostTestReceiptImage200TransactionDate = string | null;
+
+export type PostTestReceiptImage200TransactionTime = string | null;
+
+export type PostTestReceiptImage200TaxAmount = number | null;
+
+export type PostTestReceiptImage200Subtotal = number | null;
+
+export type PostTestReceiptImage200ItemsItemQuantity = number | null;
+
+export type PostTestReceiptImage200ItemsItemUnitPrice = number | null;
+
+export type PostTestReceiptImage200ItemsItem = {
+  name: string;
+  quantity?: PostTestReceiptImage200ItemsItemQuantity;
+  unitPrice?: PostTestReceiptImage200ItemsItemUnitPrice;
+  totalPrice: number;
+};
+
+export type PostTestReceiptImage200PaymentMethod = string | null;
+
+export type PostTestReceiptImage200ReceiptNumber = string | null;
+
+export type PostTestReceiptImage200Notes = string | null;
+
+export type PostTestReceiptImage200 = {
+  merchantName: string;
+  merchantAddress?: PostTestReceiptImage200MerchantAddress;
+  transactionDate?: PostTestReceiptImage200TransactionDate;
+  transactionTime?: PostTestReceiptImage200TransactionTime;
+  totalAmount: number;
+  currency: string;
+  taxAmount?: PostTestReceiptImage200TaxAmount;
+  subtotal?: PostTestReceiptImage200Subtotal;
+  items: PostTestReceiptImage200ItemsItem[];
+  paymentMethod?: PostTestReceiptImage200PaymentMethod;
+  receiptNumber?: PostTestReceiptImage200ReceiptNumber;
+  notes?: PostTestReceiptImage200Notes;
+};
+
+export type PostTestReceiptImage400 = {
+  error: string;
+};
+
+export type PostTestReceiptImage401Code =
+  (typeof PostTestReceiptImage401Code)[keyof typeof PostTestReceiptImage401Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostTestReceiptImage401Code = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+} as const;
+
+export type PostTestReceiptImage401 = {
+  code: PostTestReceiptImage401Code;
+  error: string;
+};
+
+export type PostTestReceiptImage500 = {
+  error: string;
+};
+
+export type PostTestR2UploadBody = {
+  file: Blob;
+};
+
+export type PostTestR2Upload200 = {
+  url: string;
+  key: string;
+};
+
+export type PostAdminSynapseTestUploadBody = {
+  file: Blob;
+};
+
+export type PostAdminSynapseTestUpload200 = {
+  pieceCid: string;
+  size: number;
+  pieceId: string;
+};
+
+export type PostAdminSynapseTestUpload400 = {
+  error: string;
+};
+
+export type PostAdminSynapseTestUpload401Code =
+  (typeof PostAdminSynapseTestUpload401Code)[keyof typeof PostAdminSynapseTestUpload401Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostAdminSynapseTestUpload401Code = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+} as const;
+
+export type PostAdminSynapseTestUpload401 = {
+  code: PostAdminSynapseTestUpload401Code;
+  error: string;
+};
+
+export type PostAdminSynapseTestUpload500 = {
+  error: string;
+};
+
+export type PostAdminSynapseSetupBody = {
+  amount?: string;
+};
+
+export type PostAdminSynapseSetup200 = {
+  success: boolean;
+};
+
 /**
  * @summary Get nonce for miniapp login request.
  */
@@ -613,6 +757,903 @@ export const usePostAuthSessionRevoke = <
   TContext
 > => {
   const mutationOptions = getPostAuthSessionRevokeMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Upload receipt image
+ */
+const postScanUploadReceipt = (
+  postScanUploadReceiptBody: PostScanUploadReceiptBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`file`, postScanUploadReceiptBody.file);
+
+  return customInstance<PostScanUploadReceipt200>({
+    url: `/v1/receipt`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPostScanUploadReceiptMutationOptions = <
+  TError = PostScanUploadReceipt400,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postScanUploadReceipt>>,
+    TError,
+    { data: PostScanUploadReceiptBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postScanUploadReceipt>>,
+  TError,
+  { data: PostScanUploadReceiptBody },
+  TContext
+> => {
+  const mutationKey = ["postScanUploadReceipt"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postScanUploadReceipt>>,
+    { data: PostScanUploadReceiptBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postScanUploadReceipt(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostScanUploadReceiptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postScanUploadReceipt>>
+>;
+export type PostScanUploadReceiptMutationBody = PostScanUploadReceiptBody;
+export type PostScanUploadReceiptMutationError = PostScanUploadReceipt400;
+
+/**
+ * @summary Upload receipt image
+ */
+export const usePostScanUploadReceipt = <
+  TError = PostScanUploadReceipt400,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postScanUploadReceipt>>,
+      TError,
+      { data: PostScanUploadReceiptBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postScanUploadReceipt>>,
+  TError,
+  { data: PostScanUploadReceiptBody },
+  TContext
+> => {
+  const mutationOptions = getPostScanUploadReceiptMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+const getViewSynapseImage = (receiptId: string, signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/v1/receipt/${receiptId}/image/synapse`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetViewSynapseImageQueryKey = (receiptId?: string) => {
+  return [`/v1/receipt/${receiptId}/image/synapse`] as const;
+};
+
+export const getGetViewSynapseImageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getViewSynapseImage>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getViewSynapseImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetViewSynapseImageQueryKey(receiptId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getViewSynapseImage>>
+  > = ({ signal }) => getViewSynapseImage(receiptId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!receiptId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getViewSynapseImage>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetViewSynapseImageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getViewSynapseImage>>
+>;
+export type GetViewSynapseImageQueryError = unknown;
+
+export function useGetViewSynapseImage<
+  TData = Awaited<ReturnType<typeof getViewSynapseImage>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getViewSynapseImage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getViewSynapseImage>>,
+          TError,
+          Awaited<ReturnType<typeof getViewSynapseImage>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetViewSynapseImage<
+  TData = Awaited<ReturnType<typeof getViewSynapseImage>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getViewSynapseImage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getViewSynapseImage>>,
+          TError,
+          Awaited<ReturnType<typeof getViewSynapseImage>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetViewSynapseImage<
+  TData = Awaited<ReturnType<typeof getViewSynapseImage>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getViewSynapseImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetViewSynapseImage<
+  TData = Awaited<ReturnType<typeof getViewSynapseImage>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getViewSynapseImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetViewSynapseImageQueryOptions(receiptId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+const getViewR2Image = (receiptId: string, signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/v1/receipt/${receiptId}/image/r2`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetViewR2ImageQueryKey = (receiptId?: string) => {
+  return [`/v1/receipt/${receiptId}/image/r2`] as const;
+};
+
+export const getGetViewR2ImageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getViewR2Image>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getViewR2Image>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetViewR2ImageQueryKey(receiptId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getViewR2Image>>> = ({
+    signal,
+  }) => getViewR2Image(receiptId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!receiptId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getViewR2Image>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetViewR2ImageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getViewR2Image>>
+>;
+export type GetViewR2ImageQueryError = unknown;
+
+export function useGetViewR2Image<
+  TData = Awaited<ReturnType<typeof getViewR2Image>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getViewR2Image>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getViewR2Image>>,
+          TError,
+          Awaited<ReturnType<typeof getViewR2Image>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetViewR2Image<
+  TData = Awaited<ReturnType<typeof getViewR2Image>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getViewR2Image>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getViewR2Image>>,
+          TError,
+          Awaited<ReturnType<typeof getViewR2Image>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetViewR2Image<
+  TData = Awaited<ReturnType<typeof getViewR2Image>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getViewR2Image>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetViewR2Image<
+  TData = Awaited<ReturnType<typeof getViewR2Image>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getViewR2Image>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetViewR2ImageQueryOptions(receiptId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Test receipt image analysis
+ */
+const postTestReceiptImage = (
+  postTestReceiptImageBody: PostTestReceiptImageBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`file`, postTestReceiptImageBody.file);
+
+  return customInstance<PostTestReceiptImage200>({
+    url: `/v1/test-image`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPostTestReceiptImageMutationOptions = <
+  TError =
+    | PostTestReceiptImage400
+    | PostTestReceiptImage401
+    | PostTestReceiptImage500,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postTestReceiptImage>>,
+    TError,
+    { data: PostTestReceiptImageBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postTestReceiptImage>>,
+  TError,
+  { data: PostTestReceiptImageBody },
+  TContext
+> => {
+  const mutationKey = ["postTestReceiptImage"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postTestReceiptImage>>,
+    { data: PostTestReceiptImageBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postTestReceiptImage(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostTestReceiptImageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postTestReceiptImage>>
+>;
+export type PostTestReceiptImageMutationBody = PostTestReceiptImageBody;
+export type PostTestReceiptImageMutationError =
+  | PostTestReceiptImage400
+  | PostTestReceiptImage401
+  | PostTestReceiptImage500;
+
+/**
+ * @summary Test receipt image analysis
+ */
+export const usePostTestReceiptImage = <
+  TError =
+    | PostTestReceiptImage400
+    | PostTestReceiptImage401
+    | PostTestReceiptImage500,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postTestReceiptImage>>,
+      TError,
+      { data: PostTestReceiptImageBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postTestReceiptImage>>,
+  TError,
+  { data: PostTestReceiptImageBody },
+  TContext
+> => {
+  const mutationOptions = getPostTestReceiptImageMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+const getTestResizeImage = (pieceCid: string, signal?: AbortSignal) => {
+  return customInstance<void>({
+    url: `/v1/test-resize/${pieceCid}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetTestResizeImageQueryKey = (pieceCid?: string) => {
+  return [`/v1/test-resize/${pieceCid}`] as const;
+};
+
+export const getGetTestResizeImageQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
+  TError = unknown,
+>(
+  pieceCid: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getTestResizeImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetTestResizeImageQueryKey(pieceCid);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getTestResizeImage>>
+  > = ({ signal }) => getTestResizeImage(pieceCid, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!pieceCid,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTestResizeImage>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTestResizeImageQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTestResizeImage>>
+>;
+export type GetTestResizeImageQueryError = unknown;
+
+export function useGetTestResizeImage<
+  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
+  TError = unknown,
+>(
+  pieceCid: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getTestResizeImage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTestResizeImage>>,
+          TError,
+          Awaited<ReturnType<typeof getTestResizeImage>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetTestResizeImage<
+  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
+  TError = unknown,
+>(
+  pieceCid: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getTestResizeImage>>,
+        TError,
+        TData
+      >
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTestResizeImage>>,
+          TError,
+          Awaited<ReturnType<typeof getTestResizeImage>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetTestResizeImage<
+  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
+  TError = unknown,
+>(
+  pieceCid: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getTestResizeImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+
+export function useGetTestResizeImage<
+  TData = Awaited<ReturnType<typeof getTestResizeImage>>,
+  TError = unknown,
+>(
+  pieceCid: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<
+        Awaited<ReturnType<typeof getTestResizeImage>>,
+        TError,
+        TData
+      >
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetTestResizeImageQueryOptions(pieceCid, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Test R2 Upload
+ */
+const postTestR2Upload = (
+  postTestR2UploadBody: PostTestR2UploadBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`file`, postTestR2UploadBody.file);
+
+  return customInstance<PostTestR2Upload200>({
+    url: `/v1/admin/r2/test-upload`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPostTestR2UploadMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postTestR2Upload>>,
+    TError,
+    { data: PostTestR2UploadBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postTestR2Upload>>,
+  TError,
+  { data: PostTestR2UploadBody },
+  TContext
+> => {
+  const mutationKey = ["postTestR2Upload"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postTestR2Upload>>,
+    { data: PostTestR2UploadBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postTestR2Upload(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostTestR2UploadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postTestR2Upload>>
+>;
+export type PostTestR2UploadMutationBody = PostTestR2UploadBody;
+export type PostTestR2UploadMutationError = unknown;
+
+/**
+ * @summary Test R2 Upload
+ */
+export const usePostTestR2Upload = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postTestR2Upload>>,
+      TError,
+      { data: PostTestR2UploadBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postTestR2Upload>>,
+  TError,
+  { data: PostTestR2UploadBody },
+  TContext
+> => {
+  const mutationOptions = getPostTestR2UploadMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Test Synapse Upload
+ */
+const postAdminSynapseTestUpload = (
+  postAdminSynapseTestUploadBody: PostAdminSynapseTestUploadBody,
+  signal?: AbortSignal,
+) => {
+  const formData = new FormData();
+  formData.append(`file`, postAdminSynapseTestUploadBody.file);
+
+  return customInstance<PostAdminSynapseTestUpload200>({
+    url: `/v1/admin/synapse/test-upload`,
+    method: "POST",
+    headers: { "Content-Type": "multipart/form-data" },
+    data: formData,
+    signal,
+  });
+};
+
+export const getPostAdminSynapseTestUploadMutationOptions = <
+  TError =
+    | PostAdminSynapseTestUpload400
+    | PostAdminSynapseTestUpload401
+    | PostAdminSynapseTestUpload500,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postAdminSynapseTestUpload>>,
+    TError,
+    { data: PostAdminSynapseTestUploadBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postAdminSynapseTestUpload>>,
+  TError,
+  { data: PostAdminSynapseTestUploadBody },
+  TContext
+> => {
+  const mutationKey = ["postAdminSynapseTestUpload"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postAdminSynapseTestUpload>>,
+    { data: PostAdminSynapseTestUploadBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postAdminSynapseTestUpload(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostAdminSynapseTestUploadMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postAdminSynapseTestUpload>>
+>;
+export type PostAdminSynapseTestUploadMutationBody =
+  PostAdminSynapseTestUploadBody;
+export type PostAdminSynapseTestUploadMutationError =
+  | PostAdminSynapseTestUpload400
+  | PostAdminSynapseTestUpload401
+  | PostAdminSynapseTestUpload500;
+
+/**
+ * @summary Test Synapse Upload
+ */
+export const usePostAdminSynapseTestUpload = <
+  TError =
+    | PostAdminSynapseTestUpload400
+    | PostAdminSynapseTestUpload401
+    | PostAdminSynapseTestUpload500,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postAdminSynapseTestUpload>>,
+      TError,
+      { data: PostAdminSynapseTestUploadBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postAdminSynapseTestUpload>>,
+  TError,
+  { data: PostAdminSynapseTestUploadBody },
+  TContext
+> => {
+  const mutationOptions = getPostAdminSynapseTestUploadMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
+
+/**
+ * @summary Setup Synapse
+ */
+const postAdminSynapseSetup = (
+  postAdminSynapseSetupBody: PostAdminSynapseSetupBody,
+  signal?: AbortSignal,
+) => {
+  return customInstance<PostAdminSynapseSetup200>({
+    url: `/v1/admin/synapse/setup`,
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: postAdminSynapseSetupBody,
+    signal,
+  });
+};
+
+export const getPostAdminSynapseSetupMutationOptions = <
+  TError = unknown,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postAdminSynapseSetup>>,
+    TError,
+    { data: PostAdminSynapseSetupBody },
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postAdminSynapseSetup>>,
+  TError,
+  { data: PostAdminSynapseSetupBody },
+  TContext
+> => {
+  const mutationKey = ["postAdminSynapseSetup"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postAdminSynapseSetup>>,
+    { data: PostAdminSynapseSetupBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postAdminSynapseSetup(data);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostAdminSynapseSetupMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postAdminSynapseSetup>>
+>;
+export type PostAdminSynapseSetupMutationBody = PostAdminSynapseSetupBody;
+export type PostAdminSynapseSetupMutationError = unknown;
+
+/**
+ * @summary Setup Synapse
+ */
+export const usePostAdminSynapseSetup = <TError = unknown, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postAdminSynapseSetup>>,
+      TError,
+      { data: PostAdminSynapseSetupBody },
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postAdminSynapseSetup>>,
+  TError,
+  { data: PostAdminSynapseSetupBody },
+  TContext
+> => {
+  const mutationOptions = getPostAdminSynapseSetupMutationOptions(options);
 
   return useMutation(mutationOptions, queryClient);
 };

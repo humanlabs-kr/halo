@@ -133,6 +133,150 @@ export type PostAuthSessionRevoke401 = {
   message: string;
 };
 
+export type PostScanUploadReceiptBody = {
+  file: Blob;
+};
+
+export type PostScanUploadReceipt200Result =
+  (typeof PostScanUploadReceipt200Result)[keyof typeof PostScanUploadReceipt200Result];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostScanUploadReceipt200Result = {
+  success: "success",
+} as const;
+
+export type PostScanUploadReceipt200 = {
+  result: PostScanUploadReceipt200Result;
+};
+
+export type PostScanUploadReceipt400Code =
+  (typeof PostScanUploadReceipt400Code)[keyof typeof PostScanUploadReceipt400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostScanUploadReceipt400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type PostScanUploadReceipt400 = {
+  code: PostScanUploadReceipt400Code;
+  message: string;
+};
+
+export type PostTestReceiptImageBody = {
+  file: Blob;
+};
+
+export type PostTestReceiptImage200MerchantAddress = string | null;
+
+export type PostTestReceiptImage200TransactionDate = string | null;
+
+export type PostTestReceiptImage200TransactionTime = string | null;
+
+export type PostTestReceiptImage200TaxAmount = number | null;
+
+export type PostTestReceiptImage200Subtotal = number | null;
+
+export type PostTestReceiptImage200ItemsItemQuantity = number | null;
+
+export type PostTestReceiptImage200ItemsItemUnitPrice = number | null;
+
+export type PostTestReceiptImage200ItemsItem = {
+  name: string;
+  quantity?: PostTestReceiptImage200ItemsItemQuantity;
+  unitPrice?: PostTestReceiptImage200ItemsItemUnitPrice;
+  totalPrice: number;
+};
+
+export type PostTestReceiptImage200PaymentMethod = string | null;
+
+export type PostTestReceiptImage200ReceiptNumber = string | null;
+
+export type PostTestReceiptImage200Notes = string | null;
+
+export type PostTestReceiptImage200 = {
+  merchantName: string;
+  merchantAddress?: PostTestReceiptImage200MerchantAddress;
+  transactionDate?: PostTestReceiptImage200TransactionDate;
+  transactionTime?: PostTestReceiptImage200TransactionTime;
+  totalAmount: number;
+  currency: string;
+  taxAmount?: PostTestReceiptImage200TaxAmount;
+  subtotal?: PostTestReceiptImage200Subtotal;
+  items: PostTestReceiptImage200ItemsItem[];
+  paymentMethod?: PostTestReceiptImage200PaymentMethod;
+  receiptNumber?: PostTestReceiptImage200ReceiptNumber;
+  notes?: PostTestReceiptImage200Notes;
+};
+
+export type PostTestReceiptImage400 = {
+  error: string;
+};
+
+export type PostTestReceiptImage401Code =
+  (typeof PostTestReceiptImage401Code)[keyof typeof PostTestReceiptImage401Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostTestReceiptImage401Code = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+} as const;
+
+export type PostTestReceiptImage401 = {
+  code: PostTestReceiptImage401Code;
+  error: string;
+};
+
+export type PostTestReceiptImage500 = {
+  error: string;
+};
+
+export type PostTestR2UploadBody = {
+  file: Blob;
+};
+
+export type PostTestR2Upload200 = {
+  url: string;
+  key: string;
+};
+
+export type PostAdminSynapseTestUploadBody = {
+  file: Blob;
+};
+
+export type PostAdminSynapseTestUpload200 = {
+  pieceCid: string;
+  size: number;
+  pieceId: string;
+};
+
+export type PostAdminSynapseTestUpload400 = {
+  error: string;
+};
+
+export type PostAdminSynapseTestUpload401Code =
+  (typeof PostAdminSynapseTestUpload401Code)[keyof typeof PostAdminSynapseTestUpload401Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostAdminSynapseTestUpload401Code = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+} as const;
+
+export type PostAdminSynapseTestUpload401 = {
+  code: PostAdminSynapseTestUpload401Code;
+  error: string;
+};
+
+export type PostAdminSynapseTestUpload500 = {
+  error: string;
+};
+
+export type PostAdminSynapseSetupBody = {
+  amount?: string;
+};
+
+export type PostAdminSynapseSetup200 = {
+  success: boolean;
+};
+
 /**
  * @summary Get nonce for miniapp login request.
  */
@@ -314,6 +458,318 @@ export const postAuthSessionRevoke = async (
     {
       ...options,
       method: "POST",
+    },
+  );
+};
+
+/**
+ * @summary Upload receipt image
+ */
+export type postScanUploadReceiptResponse200 = {
+  data: PostScanUploadReceipt200;
+  status: 200;
+};
+
+export type postScanUploadReceiptResponse400 = {
+  data: PostScanUploadReceipt400;
+  status: 400;
+};
+
+export type postScanUploadReceiptResponseSuccess =
+  postScanUploadReceiptResponse200 & {
+    headers: Headers;
+  };
+export type postScanUploadReceiptResponseError =
+  postScanUploadReceiptResponse400 & {
+    headers: Headers;
+  };
+
+export type postScanUploadReceiptResponse =
+  | postScanUploadReceiptResponseSuccess
+  | postScanUploadReceiptResponseError;
+
+export const getPostScanUploadReceiptUrl = () => {
+  return `/v1/receipt`;
+};
+
+export const postScanUploadReceipt = async (
+  postScanUploadReceiptBody: PostScanUploadReceiptBody,
+  options?: RequestInit,
+): Promise<postScanUploadReceiptResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, postScanUploadReceiptBody.file);
+
+  return customFetch<postScanUploadReceiptResponse>(
+    getPostScanUploadReceiptUrl(),
+    {
+      ...options,
+      method: "POST",
+      body: formData,
+    },
+  );
+};
+
+export type getViewSynapseImageResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type getViewSynapseImageResponseSuccess =
+  getViewSynapseImageResponse200 & {
+    headers: Headers;
+  };
+export type getViewSynapseImageResponse = getViewSynapseImageResponseSuccess;
+
+export const getGetViewSynapseImageUrl = (receiptId: string) => {
+  return `/v1/receipt/${receiptId}/image/synapse`;
+};
+
+export const getViewSynapseImage = async (
+  receiptId: string,
+  options?: RequestInit,
+): Promise<getViewSynapseImageResponse> => {
+  return customFetch<getViewSynapseImageResponse>(
+    getGetViewSynapseImageUrl(receiptId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export type getViewR2ImageResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type getViewR2ImageResponseSuccess = getViewR2ImageResponse200 & {
+  headers: Headers;
+};
+export type getViewR2ImageResponse = getViewR2ImageResponseSuccess;
+
+export const getGetViewR2ImageUrl = (receiptId: string) => {
+  return `/v1/receipt/${receiptId}/image/r2`;
+};
+
+export const getViewR2Image = async (
+  receiptId: string,
+  options?: RequestInit,
+): Promise<getViewR2ImageResponse> => {
+  return customFetch<getViewR2ImageResponse>(getGetViewR2ImageUrl(receiptId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+/**
+ * @summary Test receipt image analysis
+ */
+export type postTestReceiptImageResponse200 = {
+  data: PostTestReceiptImage200;
+  status: 200;
+};
+
+export type postTestReceiptImageResponse400 = {
+  data: PostTestReceiptImage400;
+  status: 400;
+};
+
+export type postTestReceiptImageResponse401 = {
+  data: PostTestReceiptImage401;
+  status: 401;
+};
+
+export type postTestReceiptImageResponse500 = {
+  data: PostTestReceiptImage500;
+  status: 500;
+};
+
+export type postTestReceiptImageResponseSuccess =
+  postTestReceiptImageResponse200 & {
+    headers: Headers;
+  };
+export type postTestReceiptImageResponseError = (
+  | postTestReceiptImageResponse400
+  | postTestReceiptImageResponse401
+  | postTestReceiptImageResponse500
+) & {
+  headers: Headers;
+};
+
+export type postTestReceiptImageResponse =
+  | postTestReceiptImageResponseSuccess
+  | postTestReceiptImageResponseError;
+
+export const getPostTestReceiptImageUrl = () => {
+  return `/v1/test-image`;
+};
+
+export const postTestReceiptImage = async (
+  postTestReceiptImageBody: PostTestReceiptImageBody,
+  options?: RequestInit,
+): Promise<postTestReceiptImageResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, postTestReceiptImageBody.file);
+
+  return customFetch<postTestReceiptImageResponse>(
+    getPostTestReceiptImageUrl(),
+    {
+      ...options,
+      method: "POST",
+      body: formData,
+    },
+  );
+};
+
+export type getTestResizeImageResponse200 = {
+  data: void;
+  status: 200;
+};
+
+export type getTestResizeImageResponseSuccess =
+  getTestResizeImageResponse200 & {
+    headers: Headers;
+  };
+export type getTestResizeImageResponse = getTestResizeImageResponseSuccess;
+
+export const getGetTestResizeImageUrl = (pieceCid: string) => {
+  return `/v1/test-resize/${pieceCid}`;
+};
+
+export const getTestResizeImage = async (
+  pieceCid: string,
+  options?: RequestInit,
+): Promise<getTestResizeImageResponse> => {
+  return customFetch<getTestResizeImageResponse>(
+    getGetTestResizeImageUrl(pieceCid),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+/**
+ * @summary Test R2 Upload
+ */
+export type postTestR2UploadResponse200 = {
+  data: PostTestR2Upload200;
+  status: 200;
+};
+
+export type postTestR2UploadResponseSuccess = postTestR2UploadResponse200 & {
+  headers: Headers;
+};
+export type postTestR2UploadResponse = postTestR2UploadResponseSuccess;
+
+export const getPostTestR2UploadUrl = () => {
+  return `/v1/admin/r2/test-upload`;
+};
+
+export const postTestR2Upload = async (
+  postTestR2UploadBody: PostTestR2UploadBody,
+  options?: RequestInit,
+): Promise<postTestR2UploadResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, postTestR2UploadBody.file);
+
+  return customFetch<postTestR2UploadResponse>(getPostTestR2UploadUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+/**
+ * @summary Test Synapse Upload
+ */
+export type postAdminSynapseTestUploadResponse200 = {
+  data: PostAdminSynapseTestUpload200;
+  status: 200;
+};
+
+export type postAdminSynapseTestUploadResponse400 = {
+  data: PostAdminSynapseTestUpload400;
+  status: 400;
+};
+
+export type postAdminSynapseTestUploadResponse401 = {
+  data: PostAdminSynapseTestUpload401;
+  status: 401;
+};
+
+export type postAdminSynapseTestUploadResponse500 = {
+  data: PostAdminSynapseTestUpload500;
+  status: 500;
+};
+
+export type postAdminSynapseTestUploadResponseSuccess =
+  postAdminSynapseTestUploadResponse200 & {
+    headers: Headers;
+  };
+export type postAdminSynapseTestUploadResponseError = (
+  | postAdminSynapseTestUploadResponse400
+  | postAdminSynapseTestUploadResponse401
+  | postAdminSynapseTestUploadResponse500
+) & {
+  headers: Headers;
+};
+
+export type postAdminSynapseTestUploadResponse =
+  | postAdminSynapseTestUploadResponseSuccess
+  | postAdminSynapseTestUploadResponseError;
+
+export const getPostAdminSynapseTestUploadUrl = () => {
+  return `/v1/admin/synapse/test-upload`;
+};
+
+export const postAdminSynapseTestUpload = async (
+  postAdminSynapseTestUploadBody: PostAdminSynapseTestUploadBody,
+  options?: RequestInit,
+): Promise<postAdminSynapseTestUploadResponse> => {
+  const formData = new FormData();
+  formData.append(`file`, postAdminSynapseTestUploadBody.file);
+
+  return customFetch<postAdminSynapseTestUploadResponse>(
+    getPostAdminSynapseTestUploadUrl(),
+    {
+      ...options,
+      method: "POST",
+      body: formData,
+    },
+  );
+};
+
+/**
+ * @summary Setup Synapse
+ */
+export type postAdminSynapseSetupResponse200 = {
+  data: PostAdminSynapseSetup200;
+  status: 200;
+};
+
+export type postAdminSynapseSetupResponseSuccess =
+  postAdminSynapseSetupResponse200 & {
+    headers: Headers;
+  };
+export type postAdminSynapseSetupResponse =
+  postAdminSynapseSetupResponseSuccess;
+
+export const getPostAdminSynapseSetupUrl = () => {
+  return `/v1/admin/synapse/setup`;
+};
+
+export const postAdminSynapseSetup = async (
+  postAdminSynapseSetupBody: PostAdminSynapseSetupBody,
+  options?: RequestInit,
+): Promise<postAdminSynapseSetupResponse> => {
+  return customFetch<postAdminSynapseSetupResponse>(
+    getPostAdminSynapseSetupUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(postAdminSynapseSetupBody),
     },
   );
 };

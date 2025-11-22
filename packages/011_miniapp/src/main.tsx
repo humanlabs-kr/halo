@@ -1,34 +1,61 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
-import App from './App.tsx'
-import CameraScan from './pages/CameraScan'
-import History from './pages/History'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Onboarding from './pages/Onboarding'
-import Rewards from './pages/Rewards'
-import './index.css'
-import './App.css'
-import { MiniKit } from '@worldcoin/minikit-js'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router";
+import "./index.css";
+import "./App.css";
+import "./utils/state/initialize-state";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Toaster } from "react-hot-toast";
+import { postAuthSessionRevoke } from "./lib/generated/fetch.ts";
+import { callApi } from "./lib/fetch-client.ts";
+import { RouteRoot } from "./route.tsx";
+import i18n from "./utils/i18n.ts";
 
-// TODO: Remove this once we have a proper app ID
-MiniKit.install?.()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
-createRoot(document.getElementById('root')!).render(
+if (import.meta.env.VITE_PROJECT_ENV !== "production") {
+  import("eruda").then((eruda) => {
+    const erudaInstance = eruda.default;
+
+    erudaInstance.init();
+    const snippets = erudaInstance.get("snippets");
+    snippets.add(
+      "Logout",
+      () => {
+        callApi(postAuthSessionRevoke).then(() => {
+          location.reload();
+        });
+      },
+      "Logout from current auth session"
+    );
+    snippets.add(
+      "Change language",
+      () => {
+        i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
+      },
+      "Change language to English or Korean"
+    );
+  });
+}
+
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route element={<App />}>
-          <Route path="home" element={<Home />} />
-          <Route path="history" element={<History />} />
-          <Route path="rewards" element={<Rewards />} />
-        </Route>
-        <Route path="onboarding" element={<Onboarding />} />
-        <Route path="camera-scan" element={<CameraScan />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
-  </StrictMode>,
-)
+    <NuqsAdapter>
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <RouteRoot />
+          <Toaster position="top-center" />
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </BrowserRouter>
+    </NuqsAdapter>
+  </StrictMode>
+);
