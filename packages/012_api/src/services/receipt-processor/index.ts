@@ -114,6 +114,19 @@ QUALITY RATE RULES:
 - If the image is cropped or missing bottom section where total normally appears → qualityRate must be ≤ 30.
 
 ----------------------------------------------------------------
+DATE RULES:
+----------------------------------------------------------------
+- Always extract the printed date string as rawDate exactly as shown.
+- Convert numeric formats using:
+  - Day = component > 12
+  - If year has 2 digits → convert to 20YY.
+- If the parsed year is clearly unreasonable (e.g., < 2000 or > currentYear + 2):
+    → set issuedAt to null BUT keep rawDate.
+- Reasonable years are: currentYear - 5 through currentYear + 2.
+- DO NOT set issuedAt to null if the raw date is clear but year parsing had a minor OCR error.
+- If day/month are legible and year is ambiguous → issuedAt=null but DO NOT penalize merchantName or totalAmount.
+
+----------------------------------------------------------------
 FAIL CONDITIONS (IMPORTANT):
 ----------------------------------------------------------------
 If ANY of the following is true:
