@@ -52,6 +52,8 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 	};
 
 	async handle(c: AppContext) {
+		const { country } = (c.req.raw as any).cf;
+
 		const userAddress = c.get('address');
 		// TODO check if user can upload receipt
 
@@ -98,6 +100,7 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 		waitUntil(
 			ReceiptAnalysisQueue.send({
 				receiptId,
+				country,
 			}),
 		);
 

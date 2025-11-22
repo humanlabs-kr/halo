@@ -22,6 +22,9 @@ export const pointLogs = schema.table(
     // 변동 후 잔고 (캐시용)
     afterBalance: integer("after_balance").notNull(),
 
+    // 누적 (더하기만 합산)
+    accumulatedBalance: integer("accumulated_balance").notNull(),
+
     // 포인트 소스 (어느 게임/활동에서 얻었는지/썼는지)
     sourceType: text("source_type")
       .$type<"airdrop" | "receipt-upload">()

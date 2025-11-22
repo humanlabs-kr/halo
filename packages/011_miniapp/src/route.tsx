@@ -28,6 +28,7 @@ export const RouteRoot = () => {
     return (
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );

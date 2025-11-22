@@ -6,6 +6,7 @@ import { R2 } from 'workers/utils/r2';
 
 type Params = {
 	receiptId: string;
+	country: string; // ISO 3166-1 Alpha 2 code
 };
 
 export const ReceiptAnalysisQueue = {
@@ -50,7 +51,7 @@ export const ReceiptAnalysisQueue = {
 						}),
 					);
 
-					const receiptData = await ReceiptProcessor.process(receiptImageDataArray);
+					const receiptData = await ReceiptProcessor.process(receiptImageDataArray, params.country);
 
 					await db
 						.update(receipts)

@@ -15,7 +15,7 @@ const openai = new OpenAI({
 
 export const ReceiptProcessor = {
 	normalizeImage: normalizeReceiptImage,
-	process: async (imageBytesArray: Uint8Array<ArrayBufferLike>[]) => {
+	process: async (imageBytesArray: Uint8Array<ArrayBufferLike>[], country: string) => {
 		const base64Images = imageBytesArray.map((imageBytes) => {
 			const buffer = Buffer.from(imageBytes);
 			return buffer.toString('base64').replace(/\s/g, '');
@@ -29,6 +29,7 @@ export const ReceiptProcessor = {
 						role: 'system',
 						content: dedent`
 You must extract structured data from receipt images from any country.
+Inferred country code from the request ip is ${country} (ISO 3166-1 Alpha 2 country code).
 
 You must never guess missing information. Only use what is clearly visible.
 
@@ -36,8 +37,8 @@ MANDATORY OUTPUT FIELDS:
 - merchantName
 - issuedAt (ISO 8601 or null)
 - totalAmount (or null)
-- countryCode (2-letter ISO or null)
-- currency (ISO or null)
+- countryCode (2-letter ISO 3166-1 Alpha 2 country code or null)
+- currency (ISO 4217 currency code or null)
 - paymentMethod (or null)
 - qualityRate (1–100)
 - rawDate (the exact date string from the image)
@@ -79,7 +80,7 @@ COUNTRY CODE RULES:
 ----------------------------------------------------------------
 CURRENCY RULES:
 ----------------------------------------------------------------
-- Use only the printed currency symbols or codes: $, ARS, USD, €, GBP, etc.
+- Use only the ISO 4217 currency code.
 - If symbol is "$" but the receipt contains Argentina markers (CUIT, CABA, IVA, etc.), set currency="ARS".
 - Never guess a currency based solely on country.
 
@@ -107,6 +108,7 @@ QUALITY RATE RULES:
   - 70–89: Minor blur/creases, core fields readable.
   - 40–69: Moderate distortion, or one core field difficult to read.
   - 0–39: Very poor, core fields unclear or missing.
+	- 0: The image is not a receipt.
 
 *** SPECIAL QUALITY PENALTIES ***
 - If totalAmount is null because NO total label exists → qualityRate must be ≤ 40.
