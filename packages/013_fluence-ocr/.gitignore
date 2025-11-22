@@ -1,0 +1,38 @@
+# Virtual Environment
+venv/
+env/
+ENV/
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+*.tsbuildinfo
+dist/
+
+# Generated
+.turbo/

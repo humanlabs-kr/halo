@@ -1,0 +1,16 @@
+{
+  "name": "@hl/fluence-ocr",
+  "version": "0.0.1",
+  "description": "Fluence OCR service for receipt processing",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm install -r requirements.txt",
+    "dev": "python3 src/service.py",
+    "format": "python3 -m black src/",
+    "lint": "python3 -m pylint src/"
+  },
+  "keywords": ["fluence", "ocr", "receipt", "tesseract"],
+  "author": "",
+  "license": "MIT"
+}
