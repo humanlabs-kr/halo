@@ -23,21 +23,18 @@ type StepCard = HistoryCard | RewardCard;
 const ONBOARDING_STEPS: Array<{
   title: string;
   subtitle: string;
-  heroLabel: string;
   heroImage: string;
   cards: StepCard[];
 }> = [
   {
-    title: "Scan every receipt, on your schedule",
-    subtitle: "Any store, any format — snap it up to 5 times a day for guaranteed entries.",
-    heroLabel: "Keep earning even while you sleep",
+    title: "Scan any receipt",
+    subtitle: "Any store, any format, any time. Take a snap of your receipt whenever you please.",
     heroImage: "/onboarding/step-2.webp",
     cards: [],
   },
   {
-    title: "See receipt quality & earn instantly",
-    subtitle: "Each scan gets a recognition score and deposits fresh points on the spot.",
-    heroLabel: "Your daily scan streak is on fire",
+    title: "Check your receipt history",
+    subtitle: "Each scan will be analyzed anonymously and be scored on image quality.",
     heroImage: "/onboarding/step-2.webp",
     cards: [
       {
@@ -65,8 +62,7 @@ const ONBOARDING_STEPS: Array<{
   },
   {
     title: "Swap points for USDC rewards",
-    subtitle: "Stack your balance and claim the USDC tier that fits your daily haul.",
-    heroLabel: "Link cards once, earn everywhere",
+    subtitle: "Stack your points and claim the USDC rewards. More points will unlock better rates!",
     heroImage: "/onboarding/step-3.webp",
     cards: [
       {
