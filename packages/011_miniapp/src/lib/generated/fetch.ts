@@ -179,6 +179,8 @@ export type GetListReceipts200ListItem = {
   id: string;
   merchantName: string;
   status: GetListReceipts200ListItemStatus;
+  currency: string;
+  totalAmount: number;
   assignedPoint: number;
   qualityRate: number;
   createdAt: GetListReceipts200ListItemCreatedAt;
@@ -189,17 +191,75 @@ export type GetListReceipts200 = {
   list: GetListReceipts200ListItem[];
 };
 
-export type GetListReceipts400Code =
-  (typeof GetListReceipts400Code)[keyof typeof GetListReceipts400Code];
+export type GetReceiptStat200 = {
+  weeklyScanCount: number;
+  dailyScanCount: number;
+};
+
+export type GetReceiptStat400Code =
+  (typeof GetReceiptStat400Code)[keyof typeof GetReceiptStat400Code];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetListReceipts400Code = {
+export const GetReceiptStat400Code = {
   BAD_REQUEST: "BAD_REQUEST",
 } as const;
 
-export type GetListReceipts400 = {
-  code: GetListReceipts400Code;
+export type GetReceiptStat400 = {
+  code: GetReceiptStat400Code;
   message: string;
+};
+
+export type GetReceiptById200Status =
+  (typeof GetReceiptById200Status)[keyof typeof GetReceiptById200Status];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetReceiptById200Status = {
+  rejected: "rejected",
+  claimable: "claimable",
+  claimed: "claimed",
+} as const;
+
+export type GetReceiptById200IssuedAt = string | null;
+
+export type GetReceiptById200CreatedAt = string | null;
+
+export type GetReceiptById200ImagesItemSynapseUploadStartedAt = string | null;
+
+export type GetReceiptById200ImagesItemSynapseUploadCompletedAt = string | null;
+
+export type GetReceiptById200ImagesItemFluenceOcrStartedAt = string | null;
+
+export type GetReceiptById200ImagesItemFluenceOcrCompletedAt = string | null;
+
+export type GetReceiptById200ImagesItemCreatedAt = string | null;
+
+export type GetReceiptById200ImagesItem = {
+  id: string;
+  numOrder: number;
+  synapseUploadStartedAt: GetReceiptById200ImagesItemSynapseUploadStartedAt;
+  synapseUploadCompletedAt: GetReceiptById200ImagesItemSynapseUploadCompletedAt;
+  synapsePieceCid: string;
+  synapseUploadError: string;
+  fluenceOcrStartedAt: GetReceiptById200ImagesItemFluenceOcrStartedAt;
+  fluenceOcrCompletedAt: GetReceiptById200ImagesItemFluenceOcrCompletedAt;
+  fluenceOcrResult?: unknown;
+  fluenceOcrError: string;
+  createdAt: GetReceiptById200ImagesItemCreatedAt;
+};
+
+export type GetReceiptById200 = {
+  id: string;
+  merchantName: string;
+  status: GetReceiptById200Status;
+  currency: string;
+  totalAmount: number;
+  issuedAt: GetReceiptById200IssuedAt;
+  countryCode: string;
+  paymentMethod: string;
+  qualityRate: number;
+  assignedPoint: number;
+  createdAt: GetReceiptById200CreatedAt;
+  images: GetReceiptById200ImagesItem[];
 };
 
 export type GetPointStat200 = {
@@ -221,22 +281,35 @@ export type GetPointStat400 = {
   message: string;
 };
 
-export type PostClaimPoint200 = {
-  accumulatedPoint: number;
-  currentPoint: number;
-  claimablePoint: number;
+export type PostClaimPointBodyVerificationLevel =
+  (typeof PostClaimPointBodyVerificationLevel)[keyof typeof PostClaimPointBodyVerificationLevel];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostClaimPointBodyVerificationLevel = {
+  orb: "orb",
+  device: "device",
+} as const;
+
+export type PostClaimPointBody = {
+  proof: string;
+  verification_level: PostClaimPointBodyVerificationLevel;
+  merkle_root: string;
+  nullifier_hash: string;
+  signal: string;
+  action: string;
 };
 
-export type PostClaimPoint400Code =
-  (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
+export type PostClaimPoint200 = {
+  claimedPoint: number;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PostClaimPoint400Code = {
   BAD_REQUEST: "BAD_REQUEST",
+  INVALID_PROOF: "INVALID_PROOF",
 } as const;
-
 export type PostClaimPoint400 = {
-  code: PostClaimPoint400Code;
+  code: (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
   message: string;
 };
 
@@ -611,21 +684,10 @@ export type getListReceiptsResponse200 = {
   status: 200;
 };
 
-export type getListReceiptsResponse400 = {
-  data: GetListReceipts400;
-  status: 400;
-};
-
 export type getListReceiptsResponseSuccess = getListReceiptsResponse200 & {
   headers: Headers;
 };
-export type getListReceiptsResponseError = getListReceiptsResponse400 & {
-  headers: Headers;
-};
-
-export type getListReceiptsResponse =
-  | getListReceiptsResponseSuccess
-  | getListReceiptsResponseError;
+export type getListReceiptsResponse = getListReceiptsResponseSuccess;
 
 export const getGetListReceiptsUrl = () => {
   return `/v1/receipts`;
@@ -687,6 +749,70 @@ export const getViewR2Image = async (
   options?: RequestInit,
 ): Promise<getViewR2ImageResponse> => {
   return customFetch<getViewR2ImageResponse>(getGetViewR2ImageUrl(receiptId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+/**
+ * @summary Get receipt stat
+ */
+export type getReceiptStatResponse200 = {
+  data: GetReceiptStat200;
+  status: 200;
+};
+
+export type getReceiptStatResponse400 = {
+  data: GetReceiptStat400;
+  status: 400;
+};
+
+export type getReceiptStatResponseSuccess = getReceiptStatResponse200 & {
+  headers: Headers;
+};
+export type getReceiptStatResponseError = getReceiptStatResponse400 & {
+  headers: Headers;
+};
+
+export type getReceiptStatResponse =
+  | getReceiptStatResponseSuccess
+  | getReceiptStatResponseError;
+
+export const getGetReceiptStatUrl = () => {
+  return `/v1/receipt/stat`;
+};
+
+export const getReceiptStat = async (
+  options?: RequestInit,
+): Promise<getReceiptStatResponse> => {
+  return customFetch<getReceiptStatResponse>(getGetReceiptStatUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+/**
+ * @summary Get receipt by id
+ */
+export type getReceiptByIdResponse200 = {
+  data: GetReceiptById200;
+  status: 200;
+};
+
+export type getReceiptByIdResponseSuccess = getReceiptByIdResponse200 & {
+  headers: Headers;
+};
+export type getReceiptByIdResponse = getReceiptByIdResponseSuccess;
+
+export const getGetReceiptByIdUrl = (receiptId: string) => {
+  return `/v1/receipts/${receiptId}`;
+};
+
+export const getReceiptById = async (
+  receiptId: string,
+  options?: RequestInit,
+): Promise<getReceiptByIdResponse> => {
+  return customFetch<getReceiptByIdResponse>(getGetReceiptByIdUrl(receiptId), {
     ...options,
     method: "GET",
   });
@@ -758,11 +884,14 @@ export const getPostClaimPointUrl = () => {
 };
 
 export const postClaimPoint = async (
+  postClaimPointBody: PostClaimPointBody,
   options?: RequestInit,
 ): Promise<postClaimPointResponse> => {
   return customFetch<postClaimPointResponse>(getPostClaimPointUrl(), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(postClaimPointBody),
   });
 };
 

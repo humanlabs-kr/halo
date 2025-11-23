@@ -1,4 +1,4 @@
-import { eq, receiptImages, receipts } from '@hl/database';
+import { eq, receiptImages, receipts, sql } from '@hl/database';
 import { env } from 'cloudflare:workers';
 import { isEmpty } from 'lodash-es';
 import { ReceiptProcessor } from 'workers/services/receipt-processor';
@@ -68,25 +68,39 @@ export const ReceiptAnalysisQueue = {
 							? 'claimable'
 							: 'rejected';
 
-					await db
-						.update(receipts)
-						.set({
-							merchantName: receiptData.merchantName,
-							issuedAt: receiptData.issuedAt,
-							countryCode: receiptData.countryCode,
-							currency: receiptData.currency,
-							totalAmount: receiptData.totalAmount ? receiptData.totalAmount.toFixed(2) : null,
-							paymentMethod: receiptData.paymentMethod,
-							qualityRate: Math.max(0, Math.min(100, Math.floor(receiptData.qualityRate))),
+					const assignedPoint = status === 'claimable' ? Math.floor((BASE_POINT_PER_RECEIPT * receiptData.qualityRate) / 100) : 0;
 
-							status,
-							// 이미지 품질에 따라 포인트 부여 (claimable 상태만)
-							assignedPoint: status === 'claimable' ? Math.floor((BASE_POINT_PER_RECEIPT * receiptData.qualityRate) / 100) : 0,
+					await db.transaction(async (tx) => {
+						const receipt = await tx.query.receipts.findFirst({
+							where: eq(receipts.id, params.receiptId),
+						});
 
-							analysisCompletedAt: new Date(),
-							analysisError: null,
-						})
-						.where(eq(receipts.id, params.receiptId));
+						if (!receipt) {
+							throw new Error('Receipt not found');
+						}
+
+						const alreadyAssignedZeroPoint = receipt.assignedPoint === -1;
+
+						await tx
+							.update(receipts)
+							.set({
+								merchantName: receiptData.merchantName,
+								issuedAt: receiptData.issuedAt,
+								countryCode: receiptData.countryCode,
+								currency: receiptData.currency,
+								totalAmount: receiptData.totalAmount ? receiptData.totalAmount.toFixed(2) : null,
+								paymentMethod: receiptData.paymentMethod,
+								qualityRate: Math.max(0, Math.min(100, Math.floor(receiptData.qualityRate))),
+
+								status: alreadyAssignedZeroPoint ? 'claimed' : status,
+								// 이미지 품질에 따라 포인트 부여 (claimable 상태만)
+								assignedPoint: alreadyAssignedZeroPoint ? 0 : assignedPoint,
+
+								analysisCompletedAt: new Date(),
+								analysisError: null,
+							})
+							.where(eq(receipts.id, params.receiptId));
+					});
 
 					console.log('Receipt analysis completed for receipt:', params.receiptId);
 				} catch (error: any) {

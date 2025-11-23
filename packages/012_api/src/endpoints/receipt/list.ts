@@ -1,12 +1,7 @@
 import { OpenAPIRoute, contentJson } from 'chanfana';
 import { z } from 'zod';
 import type { AppContext } from 'workers/types';
-import { ReceiptProcessor } from '../../services/receipt-processor';
-import { R2 } from 'workers/utils/r2';
-import { waitUntil } from 'cloudflare:workers';
-import { desc, eq, receiptImages, receipts } from '@hl/database';
-import { randomUUID } from 'crypto';
-import { FluenceOcrQueue, ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queues';
+import { desc, eq, receipts } from '@hl/database';
 
 export class ListReceipts extends OpenAPIRoute {
 	schema = {
@@ -24,6 +19,8 @@ export class ListReceipts extends OpenAPIRoute {
 								id: z.string(),
 								merchantName: z.string(),
 								status: z.enum(['pending', 'rejected', 'claimable', 'claimed']),
+								currency: z.string(),
+								totalAmount: z.number(),
 								assignedPoint: z.number(),
 								qualityRate: z.number(),
 								createdAt: z.coerce.date(),
@@ -32,21 +29,10 @@ export class ListReceipts extends OpenAPIRoute {
 					}),
 				),
 			},
-			'400': {
-				description: 'Bad Request',
-				...contentJson(
-					z.object({
-						code: z.literal('BAD_REQUEST'),
-						message: z.string(),
-					}),
-				),
-			},
 		},
 	};
 
 	async handle(c: AppContext) {
-		const { country } = (c.req.raw as any).cf;
-
 		const userAddress = c.get('address');
 
 		const receiptRecords = await c.get('db').query.receipts.findMany({
@@ -55,6 +41,8 @@ export class ListReceipts extends OpenAPIRoute {
 				merchantName: true,
 				status: true,
 				assignedPoint: true,
+				currency: true,
+				totalAmount: true,
 				qualityRate: true,
 				createdAt: true,
 			},
@@ -68,6 +56,8 @@ export class ListReceipts extends OpenAPIRoute {
 				id: receipt.id,
 				merchantName: receipt.merchantName,
 				status: receipt.status,
+				currency: receipt.currency,
+				totalAmount: receipt.totalAmount,
 				assignedPoint: receipt.assignedPoint,
 				qualityRate: receipt.qualityRate,
 				createdAt: receipt.createdAt,

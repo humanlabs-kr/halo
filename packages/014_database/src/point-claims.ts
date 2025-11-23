@@ -11,7 +11,7 @@ import { users } from "./users";
 import { relations } from "drizzle-orm";
 
 export const pointClaims = schema.table("point_claims", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: varchar("id", { length: 27 }).primaryKey(), // KSUID
   userAddress: varchar("user_address", { length: 255 })
     .references(() => users.address, { onDelete: "cascade" })
     .notNull(),

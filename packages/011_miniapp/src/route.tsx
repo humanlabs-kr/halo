@@ -5,6 +5,7 @@ import { useWorldAuthStore } from "./utils/state/use-world-auth-store";
 import { Navigate, Route, Routes } from "react-router";
 import CameraScan from "./pages/CameraScan";
 import History from "./pages/History";
+import HistoryDetail from "./pages/HistoryDetail";
 import Onboarding from "./pages/Onboarding";
 import Rewards from "./pages/Rewards";
 
@@ -17,6 +18,7 @@ export const RouteRoot = () => {
         <Route element={<App />}>
           <Route path="home" element={<Home />} />
           <Route path="history" element={<History />} />
+          <Route path="history/:receiptId" element={<HistoryDetail />} />
           <Route path="rewards" element={<Rewards />} />
         </Route>
         <Route path="onboarding" element={<Onboarding />} />

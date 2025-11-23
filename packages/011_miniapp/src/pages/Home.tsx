@@ -5,12 +5,10 @@ import { getSafeAreaInsetsBottom } from "../utils/device";
 import { sendLightImpactHaptic } from "../components/hapticFeedback";
 import Onboarding from "./Onboarding";
 import { useWorldAuthStore } from "@/utils/state/use-world-auth-store";
-import { useGetPointStat } from "@/lib/generated/react-query";
-
-const progressList = [
-  { label: "Daily Scans", value: "1/5", ratio: 0.2 },
-  { label: "Weekly Scans", value: "31/35", ratio: 0.89 },
-];
+import {
+  useGetPointStat,
+  useGetReceiptStat,
+} from "@/lib/generated/react-query";
 
 /**
  * Level tiers:
@@ -87,6 +85,23 @@ function HomeHeader() {
 }
 
 function ProgressCard() {
+  const { data: receiptStat } = useGetReceiptStat();
+  const dailyScanCount = receiptStat?.dailyScanCount ?? 0;
+  const weeklyScanCount = receiptStat?.weeklyScanCount ?? 0;
+
+  const progressList = [
+    {
+      label: "Daily Scans",
+      value: `${dailyScanCount}/5`,
+      ratio: Math.min(dailyScanCount / 5, 1),
+    },
+    {
+      label: "Weekly Scans",
+      value: `${weeklyScanCount}/35`,
+      ratio: Math.min(weeklyScanCount / 35, 1),
+    },
+  ];
+
   return (
     <article className="pressed rounded-[28px] bg-card-background p-5">
       <div className="space-y-5">

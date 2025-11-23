@@ -27,6 +27,7 @@ if (import.meta.env.VITE_PROJECT_ENV !== "production") {
 
     erudaInstance.init();
     const snippets = erudaInstance.get("snippets");
+    snippets.clear();
     snippets.add(
       "Logout",
       () => {
@@ -48,14 +49,14 @@ if (import.meta.env.VITE_PROJECT_ENV !== "production") {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <NuqsAdapter>
-      <BrowserRouter>
-        <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <NuqsAdapter>
+        <BrowserRouter>
           <RouteRoot />
           <Toaster position="top-center" />
-          <ReactQueryDevtools initialIsOpen={false} />
-        </QueryClientProvider>
-      </BrowserRouter>
-    </NuqsAdapter>
+        </BrowserRouter>
+      </NuqsAdapter>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   </StrictMode>
 );

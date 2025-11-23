@@ -195,6 +195,8 @@ export type GetListReceipts200ListItem = {
   id: string;
   merchantName: string;
   status: GetListReceipts200ListItemStatus;
+  currency: string;
+  totalAmount: number;
   assignedPoint: number;
   qualityRate: number;
   createdAt: GetListReceipts200ListItemCreatedAt;
@@ -205,17 +207,75 @@ export type GetListReceipts200 = {
   list: GetListReceipts200ListItem[];
 };
 
-export type GetListReceipts400Code =
-  (typeof GetListReceipts400Code)[keyof typeof GetListReceipts400Code];
+export type GetReceiptStat200 = {
+  weeklyScanCount: number;
+  dailyScanCount: number;
+};
+
+export type GetReceiptStat400Code =
+  (typeof GetReceiptStat400Code)[keyof typeof GetReceiptStat400Code];
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
-export const GetListReceipts400Code = {
+export const GetReceiptStat400Code = {
   BAD_REQUEST: "BAD_REQUEST",
 } as const;
 
-export type GetListReceipts400 = {
-  code: GetListReceipts400Code;
+export type GetReceiptStat400 = {
+  code: GetReceiptStat400Code;
   message: string;
+};
+
+export type GetReceiptById200Status =
+  (typeof GetReceiptById200Status)[keyof typeof GetReceiptById200Status];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetReceiptById200Status = {
+  rejected: "rejected",
+  claimable: "claimable",
+  claimed: "claimed",
+} as const;
+
+export type GetReceiptById200IssuedAt = string | null;
+
+export type GetReceiptById200CreatedAt = string | null;
+
+export type GetReceiptById200ImagesItemSynapseUploadStartedAt = string | null;
+
+export type GetReceiptById200ImagesItemSynapseUploadCompletedAt = string | null;
+
+export type GetReceiptById200ImagesItemFluenceOcrStartedAt = string | null;
+
+export type GetReceiptById200ImagesItemFluenceOcrCompletedAt = string | null;
+
+export type GetReceiptById200ImagesItemCreatedAt = string | null;
+
+export type GetReceiptById200ImagesItem = {
+  id: string;
+  numOrder: number;
+  synapseUploadStartedAt: GetReceiptById200ImagesItemSynapseUploadStartedAt;
+  synapseUploadCompletedAt: GetReceiptById200ImagesItemSynapseUploadCompletedAt;
+  synapsePieceCid: string;
+  synapseUploadError: string;
+  fluenceOcrStartedAt: GetReceiptById200ImagesItemFluenceOcrStartedAt;
+  fluenceOcrCompletedAt: GetReceiptById200ImagesItemFluenceOcrCompletedAt;
+  fluenceOcrResult?: unknown;
+  fluenceOcrError: string;
+  createdAt: GetReceiptById200ImagesItemCreatedAt;
+};
+
+export type GetReceiptById200 = {
+  id: string;
+  merchantName: string;
+  status: GetReceiptById200Status;
+  currency: string;
+  totalAmount: number;
+  issuedAt: GetReceiptById200IssuedAt;
+  countryCode: string;
+  paymentMethod: string;
+  qualityRate: number;
+  assignedPoint: number;
+  createdAt: GetReceiptById200CreatedAt;
+  images: GetReceiptById200ImagesItem[];
 };
 
 export type GetPointStat200 = {
@@ -237,22 +297,35 @@ export type GetPointStat400 = {
   message: string;
 };
 
-export type PostClaimPoint200 = {
-  accumulatedPoint: number;
-  currentPoint: number;
-  claimablePoint: number;
+export type PostClaimPointBodyVerificationLevel =
+  (typeof PostClaimPointBodyVerificationLevel)[keyof typeof PostClaimPointBodyVerificationLevel];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostClaimPointBodyVerificationLevel = {
+  orb: "orb",
+  device: "device",
+} as const;
+
+export type PostClaimPointBody = {
+  proof: string;
+  verification_level: PostClaimPointBodyVerificationLevel;
+  merkle_root: string;
+  nullifier_hash: string;
+  signal: string;
+  action: string;
 };
 
-export type PostClaimPoint400Code =
-  (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
+export type PostClaimPoint200 = {
+  claimedPoint: number;
+};
 
 // eslint-disable-next-line @typescript-eslint/no-redeclare
 export const PostClaimPoint400Code = {
   BAD_REQUEST: "BAD_REQUEST",
+  INVALID_PROOF: "INVALID_PROOF",
 } as const;
-
 export type PostClaimPoint400 = {
-  code: PostClaimPoint400Code;
+  code: (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
   message: string;
 };
 
@@ -961,7 +1034,7 @@ export const getGetListReceiptsQueryKey = () => {
 
 export const getGetListReceiptsQueryOptions = <
   TData = Awaited<ReturnType<typeof getListReceipts>>,
-  TError = GetListReceipts400,
+  TError = unknown,
 >(options?: {
   query?: Partial<
     UseQueryOptions<Awaited<ReturnType<typeof getListReceipts>>, TError, TData>
@@ -985,11 +1058,11 @@ export const getGetListReceiptsQueryOptions = <
 export type GetListReceiptsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getListReceipts>>
 >;
-export type GetListReceiptsQueryError = GetListReceipts400;
+export type GetListReceiptsQueryError = unknown;
 
 export function useGetListReceipts<
   TData = Awaited<ReturnType<typeof getListReceipts>>,
-  TError = GetListReceipts400,
+  TError = unknown,
 >(
   options: {
     query: Partial<
@@ -1014,7 +1087,7 @@ export function useGetListReceipts<
 };
 export function useGetListReceipts<
   TData = Awaited<ReturnType<typeof getListReceipts>>,
-  TError = GetListReceipts400,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -1039,7 +1112,7 @@ export function useGetListReceipts<
 };
 export function useGetListReceipts<
   TData = Awaited<ReturnType<typeof getListReceipts>>,
-  TError = GetListReceipts400,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -1060,7 +1133,7 @@ export function useGetListReceipts<
 
 export function useGetListReceipts<
   TData = Awaited<ReturnType<typeof getListReceipts>>,
-  TError = GetListReceipts400,
+  TError = unknown,
 >(
   options?: {
     query?: Partial<
@@ -1376,6 +1449,273 @@ export function useGetViewR2Image<
 }
 
 /**
+ * @summary Get receipt stat
+ */
+const getReceiptStat = (signal?: AbortSignal) => {
+  return customInstance<GetReceiptStat200>({
+    url: `/v1/receipt/stat`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetReceiptStatQueryKey = () => {
+  return [`/v1/receipt/stat`] as const;
+};
+
+export const getGetReceiptStatQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReceiptStat>>,
+  TError = GetReceiptStat400,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getReceiptStat>>, TError, TData>
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReceiptStatQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReceiptStat>>> = ({
+    signal,
+  }) => getReceiptStat(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getReceiptStat>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetReceiptStatQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getReceiptStat>>
+>;
+export type GetReceiptStatQueryError = GetReceiptStat400;
+
+export function useGetReceiptStat<
+  TData = Awaited<ReturnType<typeof getReceiptStat>>,
+  TError = GetReceiptStat400,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptStat>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceiptStat>>,
+          TError,
+          Awaited<ReturnType<typeof getReceiptStat>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetReceiptStat<
+  TData = Awaited<ReturnType<typeof getReceiptStat>>,
+  TError = GetReceiptStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptStat>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceiptStat>>,
+          TError,
+          Awaited<ReturnType<typeof getReceiptStat>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetReceiptStat<
+  TData = Awaited<ReturnType<typeof getReceiptStat>>,
+  TError = GetReceiptStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptStat>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Get receipt stat
+ */
+
+export function useGetReceiptStat<
+  TData = Awaited<ReturnType<typeof getReceiptStat>>,
+  TError = GetReceiptStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptStat>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetReceiptStatQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Get receipt by id
+ */
+const getReceiptById = (receiptId: string, signal?: AbortSignal) => {
+  return customInstance<GetReceiptById200>({
+    url: `/v1/receipts/${receiptId}`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetReceiptByIdQueryKey = (receiptId?: string) => {
+  return [`/v1/receipts/${receiptId}`] as const;
+};
+
+export const getGetReceiptByIdQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReceiptById>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptById>>, TError, TData>
+    >;
+  },
+) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetReceiptByIdQueryKey(receiptId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReceiptById>>> = ({
+    signal,
+  }) => getReceiptById(receiptId, signal);
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!receiptId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getReceiptById>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetReceiptByIdQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getReceiptById>>
+>;
+export type GetReceiptByIdQueryError = unknown;
+
+export function useGetReceiptById<
+  TData = Awaited<ReturnType<typeof getReceiptById>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptById>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceiptById>>,
+          TError,
+          Awaited<ReturnType<typeof getReceiptById>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetReceiptById<
+  TData = Awaited<ReturnType<typeof getReceiptById>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptById>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getReceiptById>>,
+          TError,
+          Awaited<ReturnType<typeof getReceiptById>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetReceiptById<
+  TData = Awaited<ReturnType<typeof getReceiptById>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptById>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Get receipt by id
+ */
+
+export function useGetReceiptById<
+  TData = Awaited<ReturnType<typeof getReceiptById>>,
+  TError = unknown,
+>(
+  receiptId: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getReceiptById>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetReceiptByIdQueryOptions(receiptId, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
  * @summary Get point stat
  */
 const getPointStat = (signal?: AbortSignal) => {
@@ -1505,10 +1845,15 @@ export function useGetPointStat<
 /**
  * @summary Claim point
  */
-const postClaimPoint = (signal?: AbortSignal) => {
+const postClaimPoint = (
+  postClaimPointBody: PostClaimPointBody,
+  signal?: AbortSignal,
+) => {
   return customInstance<PostClaimPoint200>({
     url: `/v1/point/claim`,
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    data: postClaimPointBody,
     signal,
   });
 };
@@ -1520,13 +1865,13 @@ export const getPostClaimPointMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof postClaimPoint>>,
     TError,
-    void,
+    { data: PostClaimPointBody },
     TContext
   >;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof postClaimPoint>>,
   TError,
-  void,
+  { data: PostClaimPointBody },
   TContext
 > => {
   const mutationKey = ["postClaimPoint"];
@@ -1540,9 +1885,11 @@ export const getPostClaimPointMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof postClaimPoint>>,
-    void
-  > = () => {
-    return postClaimPoint();
+    { data: PostClaimPointBody }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return postClaimPoint(data);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -1551,7 +1898,7 @@ export const getPostClaimPointMutationOptions = <
 export type PostClaimPointMutationResult = NonNullable<
   Awaited<ReturnType<typeof postClaimPoint>>
 >;
-
+export type PostClaimPointMutationBody = PostClaimPointBody;
 export type PostClaimPointMutationError = PostClaimPoint400;
 
 /**
@@ -1565,7 +1912,7 @@ export const usePostClaimPoint = <
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof postClaimPoint>>,
       TError,
-      void,
+      { data: PostClaimPointBody },
       TContext
     >;
   },
@@ -1573,7 +1920,7 @@ export const usePostClaimPoint = <
 ): UseMutationResult<
   Awaited<ReturnType<typeof postClaimPoint>>,
   TError,
-  void,
+  { data: PostClaimPointBody },
   TContext
 > => {
   const mutationOptions = getPostClaimPointMutationOptions(options);

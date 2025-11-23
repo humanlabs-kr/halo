@@ -4,10 +4,11 @@ import type { AppContext } from 'workers/types';
 import { ReceiptProcessor } from '../../services/receipt-processor';
 import { R2 } from 'workers/utils/r2';
 import { waitUntil } from 'cloudflare:workers';
-import { receiptImages, receipts } from '@hl/database';
+import { and, eq, gte, lt, receiptImages, receipts, sql } from '@hl/database';
 import { randomUUID } from 'crypto';
 import { FluenceOcrQueue, ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queues';
 import KSUID from 'ksuid';
+import { addDays, startOfWeek } from 'date-fns';
 
 export class ScanUploadReceipt extends OpenAPIRoute {
 	schema = {
@@ -66,11 +67,26 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 		}
 
 		const { receiptId, receiptImageIds } = await c.get('db').transaction(async (tx) => {
+			const weeklyScanCount = await tx
+				.select({
+					count: sql<number>`count(*)`.as('count'),
+				})
+				.from(receipts)
+				.where(
+					and(
+						eq(receipts.userAddress, userAddress),
+						gte(receipts.createdAt, startOfWeek(new Date())),
+						lt(receipts.createdAt, startOfWeek(addDays(new Date(), 7))),
+					),
+				)
+				.then((result) => result[0]?.count ?? 0);
+
 			// create a receipt row
 			const receiptId = KSUID.randomSync().string;
 			await tx.insert(receipts).values({
 				id: receiptId,
 				userAddress,
+				assignedPoint: weeklyScanCount >= 35 ? -1 : undefined,
 			});
 
 			// TODO create many receipt images rows after we support multiple images per receipt

@@ -58,7 +58,7 @@ CREATE TABLE "receipto"."point_logs" (
 );
 --> statement-breakpoint
 CREATE TABLE "receipto"."point_claims" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" varchar(27) PRIMARY KEY NOT NULL,
 	"user_address" varchar(255) NOT NULL,
 	"signal" text NOT NULL,
 	"action" text NOT NULL,

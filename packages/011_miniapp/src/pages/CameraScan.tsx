@@ -33,6 +33,9 @@ function CameraScan() {
 
     setIsReviewing(true);
     capturePhoto(videoRef, async () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
       // Take a snapshot from the video and create a File object ("receipt.jpg")
       const canvas = document.createElement("canvas");
       const video = videoRef.current!;
@@ -51,6 +54,7 @@ function CameraScan() {
             }
           }, "image/jpeg");
         });
+
       const file = await getFile();
       await callApi(
         postScanUploadReceipt,
@@ -65,9 +69,6 @@ function CameraScan() {
       setCompletedSteps((prev) => Math.min(TOTAL_STEPS, prev + 1));
       setIsReviewing(false);
       setShowPopup(true);
-      if (videoRef.current) {
-        videoRef.current.pause();
-      }
     });
   };
 

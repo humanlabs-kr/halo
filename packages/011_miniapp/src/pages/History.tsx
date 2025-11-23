@@ -7,14 +7,20 @@ import {
   sendSuccessNotificationHaptic,
 } from "../components/hapticFeedback";
 import {
+  getGetListReceiptsQueryKey,
+  getGetPointStatQueryKey,
   GetListReceipts200ListItem,
   GetListReceipts200ListItemStatus,
+  PostClaimPointBodyVerificationLevel,
   useGetListReceipts,
   useGetPointStat,
+  usePostClaimPoint,
 } from "@/lib/generated/react-query";
 
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { MiniKit, VerificationLevel } from "@worldcoin/minikit-js";
+import { useQueryClient } from "@tanstack/react-query";
 
 dayjs.extend(relativeTime);
 
@@ -29,14 +35,20 @@ const statusMeta: Record<GetListReceipts200ListItemStatus, { label: string }> =
 function History() {
   const listReceiptsQueryResult = useGetListReceipts({
     query: {
-      refetchInterval: 3000,
+      refetchInterval: 5000,
     },
   });
 
-  const { data: pointStat } = useGetPointStat();
+  const { data: pointStat } = useGetPointStat({
+    query: {
+      refetchInterval: 5000,
+    },
+  });
 
   const [showClaimModal, setShowClaimModal] = useState(false);
   const claimablePoints = pointStat?.claimablePoint ?? 0;
+
+  const [claimedPoints, setClaimedPoints] = useState(0);
 
   return (
     <div className="flex h-full flex-col bg-white text-black pb-4">
@@ -47,7 +59,10 @@ function History() {
       <div className="flex-1 px-4">
         <ReadyCard
           claimablePoints={claimablePoints}
-          onClaim={() => setShowClaimModal(true)}
+          onClaimSuccess={(points) => {
+            setClaimedPoints(points);
+            setShowClaimModal(true);
+          }}
         />
         <ResultsToolbar total={listReceiptsQueryResult.data?.totalCount ?? 0} />
         <div className="mt-2.5 space-y-2">
@@ -69,7 +84,7 @@ function History() {
       </div>
       {showClaimModal && (
         <ClaimSuccessModal
-          points={claimablePoints}
+          points={claimedPoints}
           onClose={() => setShowClaimModal(false)}
         />
       )}
@@ -79,12 +94,48 @@ function History() {
 
 function ReadyCard({
   claimablePoints,
-  onClaim,
+  onClaimSuccess,
 }: {
   claimablePoints: number;
-  onClaim: () => void;
+  onClaimSuccess: (points: number) => void;
 }) {
   const hasClaimable = claimablePoints > 0;
+
+  const queryClient = useQueryClient();
+
+  const claimPointMutation = usePostClaimPoint({
+    mutation: {
+      onSuccess: (data) => {
+        queryClient.refetchQueries({ queryKey: getGetListReceiptsQueryKey() });
+        queryClient.refetchQueries({ queryKey: getGetPointStatQueryKey() });
+        sendSuccessNotificationHaptic();
+        onClaimSuccess(data.claimedPoint);
+      },
+    },
+  });
+
+  const onClaim = async () => {
+    const { finalPayload } = await MiniKit.commandsAsync.verify({
+      action: "claim-points",
+      signal: "claim-points",
+      verification_level: VerificationLevel.Device,
+    });
+
+    if (finalPayload.status === "success") {
+      claimPointMutation.mutate({
+        data: {
+          proof: finalPayload.proof,
+          verification_level:
+            finalPayload.verification_level as PostClaimPointBodyVerificationLevel,
+          merkle_root: finalPayload.merkle_root,
+          nullifier_hash: finalPayload.nullifier_hash,
+          signal: "claim-points",
+          action: "claim-points",
+        },
+      });
+    }
+  };
+
   return (
     <article
       className={`mt-5 pressed flex items-center justify-between rounded-[28px] ${hasClaimable ? "bg-[#E7F3FF]" : "bg-[#F4F4F4]"} px-5 py-4.5`}
@@ -102,13 +153,14 @@ function ReadyCard({
       {hasClaimable ? (
         <button
           type="button"
-          className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90"
+          className={`rounded-full bg-black px-5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90 ${claimPointMutation.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
           onClick={() => {
             sendSuccessNotificationHaptic();
             onClaim();
           }}
+          disabled={claimPointMutation.isPending}
         >
-          Claim
+          {claimPointMutation.isPending ? "Claiming..." : "Claim"}
         </button>
       ) : (
         <Link
@@ -143,60 +195,81 @@ function ResultsToolbar({ total }: { total: number }) {
 
 function ReceiptCell({ item }: { item: GetListReceipts200ListItem }) {
   const meta = statusMeta[item.status];
+
+  const handleClick = () => {
+    sendLightImpactHaptic();
+  };
+
   if (item.status === "pending") {
     return (
-      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
-        <div>
-          <p className="text-base font-semibold text-black">{meta.label}</p>
-          <p className="text-xs text-[#6C6C6C]">
-            {dayjs(item.createdAt).fromNow()}
-          </p>
-        </div>
-        <img
-          src="/fi_clock.svg"
-          alt="Clock"
-          className="h-6 w-6 text-[#585858]"
-        />
-      </article>
-    );
-  }
-
-  if (item.status === "rejected") {
-    return (
-      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
-        <div className="flex items-center gap-3.5">
-          <ScoreBadge score={0} />
+      <Link to={`/history/${item.id}`} onClick={handleClick} className="block">
+        <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
           <div>
             <p className="text-base font-semibold text-black">{meta.label}</p>
             <p className="text-xs text-[#6C6C6C]">
               {dayjs(item.createdAt).fromNow()}
             </p>
           </div>
-        </div>
-        <p className="text-base font-semibold text-black">0Pt</p>
-      </article>
+          <img
+            src="/fi_clock.svg"
+            alt="Clock"
+            className="h-6 w-6 text-[#585858]"
+          />
+        </article>
+      </Link>
+    );
+  }
+
+  if (item.status === "rejected") {
+    return (
+      <Link to={`/history/${item.id}`} onClick={handleClick} className="block">
+        <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+          <div className="flex items-center gap-3.5">
+            <ScoreBadge score={0} />
+            <div>
+              <p className="text-base font-semibold text-black">{meta.label}</p>
+              <p className="text-xs text-[#6C6C6C]">
+                {dayjs(item.createdAt).fromNow()}
+              </p>
+            </div>
+          </div>
+          <p className="text-base font-semibold text-black">0Pt</p>
+        </article>
+      </Link>
     );
   }
 
   return (
-    <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
-      <div className="flex items-center gap-3.5">
-        <ScoreBadge score={item.qualityRate} />
-        <div className="space-y-1">
-          <p className="text-base font-semibold text-black">
-            {item.merchantName}
-          </p>
-          <p className="text-xs text-[#6C6C6C]">
-            <span>{meta.label}</span>
-            <span> · </span>
-            <span>{dayjs(item.createdAt).fromNow()}</span>
-          </p>
+    <Link to={`/history/${item.id}`} onClick={handleClick} className="block">
+      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+        <div className="flex items-center gap-3.5">
+          <ScoreBadge score={item.qualityRate} />
+          <div className="space-y-1">
+            <p className="text-base font-semibold text-black">
+              {item.merchantName}{" "}
+              <span className="text-xs font-normal text-[#6C6C6C]">
+                ({item.currency}{" "}
+                {item.totalAmount != null
+                  ? Number(item.totalAmount).toLocaleString("en-US", {
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 2,
+                    })
+                  : "—"}
+                )
+              </span>
+            </p>
+            <p className="text-xs text-[#6C6C6C]">
+              <span>{meta.label}</span>
+              <span> · </span>
+              <span>{dayjs(item.createdAt).fromNow()}</span>
+            </p>
+          </div>
         </div>
-      </div>
-      <p className="text-base font-semibold text-black">
-        {item.assignedPoint || 0}Pt
-      </p>
-    </article>
+        <p className="text-base font-semibold text-black">
+          {item.assignedPoint || 0}Pt
+        </p>
+      </article>
+    </Link>
   );
 }
 
