@@ -46,11 +46,11 @@ function Login() {
       <div className="flex flex-1 flex-col items-center justify-center gap-6">
         <img
           src="/logo_temp.png"
-          alt="Receipto"
+          alt="Halo"
           className="h-auto w-40 animate-login-float object-contain"
         />
         <div className="space-y-1.5">
-          <h1 className="text-3xl font-extrabold tracking-tight">Receipto</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">Halo</h1>
           <p className="text-base font-medium text-[#4A4A4A]">
             Snap a receipt, get rewarded.
           </p>
