@@ -8,11 +8,7 @@ import { NuqsAdapter } from "nuqs/adapters/react-router/v7";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "react-hot-toast";
-import { postAuthSessionRevoke } from "./lib/generated/fetch.ts";
-import { callApi } from "./lib/fetch-client.ts";
 import { RouteRoot } from "./route.tsx";
-import i18n from "./utils/i18n.ts";
-import { resetOnboardingFlag } from "./utils/onboardingStorage.ts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,39 +17,6 @@ const queryClient = new QueryClient({
     },
   },
 });
-
-if (import.meta.env.VITE_PROJECT_ENV !== "production") {
-  import("eruda").then((eruda) => {
-    const erudaInstance = eruda.default;
-
-    erudaInstance.init();
-    const snippets = erudaInstance.get("snippets");
-    snippets.clear();
-    snippets.add(
-      "Logout",
-      () => {
-        callApi(postAuthSessionRevoke).then(() => {
-          location.reload();
-        });
-      },
-      "Logout from current auth session"
-    );
-    snippets.add(
-      "Change language",
-      () => {
-        i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
-      },
-      "Change language to English or Korean"
-    );
-    snippets.add(
-      "Reset onboarding",
-      () => {
-        resetOnboardingFlag();
-      },
-      "Reset onboarding flag"
-    );
-  });
-}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

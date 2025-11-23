@@ -3,6 +3,10 @@ import { MiniKit } from "@worldcoin/minikit-js";
 import { useWorldPermissionStore } from "./use-permission-store";
 import { useWorldAuthStore } from "./use-world-auth-store";
 import "@hl/client-common";
+import { callApi } from "@/lib/fetch-client";
+import { postAuthSessionRevoke } from "@/lib/generated/fetch";
+import i18n from "../i18n";
+import { resetOnboardingFlag } from "../onboardingStorage";
 
 // 스토어 생성 후 자동으로 초기화 실행
 const initializeMiniKit = async () => {
@@ -30,7 +34,34 @@ const whenAuthenticated = () => {
   // 개발자 대상으로 eruda 실행
   if (DEVELOPERS.includes(address)) {
     import("eruda").then((eruda) => {
-      eruda.default.init();
+      const erudaInstance = eruda.default;
+
+      erudaInstance.init();
+      const snippets = erudaInstance.get("snippets");
+      snippets.clear();
+      snippets.add(
+        "Logout",
+        () => {
+          callApi(postAuthSessionRevoke).then(() => {
+            location.reload();
+          });
+        },
+        "Logout from current auth session"
+      );
+      snippets.add(
+        "Change language",
+        () => {
+          i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
+        },
+        "Change language to English or Korean"
+      );
+      snippets.add(
+        "Reset onboarding",
+        () => {
+          resetOnboardingFlag();
+        },
+        "Reset onboarding flag"
+      );
     });
   }
 };
