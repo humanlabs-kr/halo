@@ -16,7 +16,6 @@
   "dependencies": {
     "@cloudflare/puppeteer": "^1.0.4",
     "@hl/client-common": "workspace:*",
-    "@hl/evm-contracts": "workspace:*",
     "@hl/notification-sdk": "workspace:*",
     "@hookform/resolvers": "^5.0.1",
     "@tailwindcss/vite": "^4.1.17",
