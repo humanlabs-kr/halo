@@ -202,6 +202,44 @@ export type GetListReceipts400 = {
   message: string;
 };
 
+export type GetPointStat200 = {
+  accumulatedPoint: number;
+  currentPoint: number;
+  claimablePoint: number;
+};
+
+export type GetPointStat400Code =
+  (typeof GetPointStat400Code)[keyof typeof GetPointStat400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetPointStat400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type GetPointStat400 = {
+  code: GetPointStat400Code;
+  message: string;
+};
+
+export type PostClaimPoint200 = {
+  accumulatedPoint: number;
+  currentPoint: number;
+  claimablePoint: number;
+};
+
+export type PostClaimPoint400Code =
+  (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostClaimPoint400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type PostClaimPoint400 = {
+  code: PostClaimPoint400Code;
+  message: string;
+};
+
 export type PostTestReceiptImageAnalysisBody = {
   file: Blob;
 };
@@ -651,6 +689,80 @@ export const getViewR2Image = async (
   return customFetch<getViewR2ImageResponse>(getGetViewR2ImageUrl(receiptId), {
     ...options,
     method: "GET",
+  });
+};
+
+/**
+ * @summary Get point stat
+ */
+export type getPointStatResponse200 = {
+  data: GetPointStat200;
+  status: 200;
+};
+
+export type getPointStatResponse400 = {
+  data: GetPointStat400;
+  status: 400;
+};
+
+export type getPointStatResponseSuccess = getPointStatResponse200 & {
+  headers: Headers;
+};
+export type getPointStatResponseError = getPointStatResponse400 & {
+  headers: Headers;
+};
+
+export type getPointStatResponse =
+  | getPointStatResponseSuccess
+  | getPointStatResponseError;
+
+export const getGetPointStatUrl = () => {
+  return `/v1/point/stat`;
+};
+
+export const getPointStat = async (
+  options?: RequestInit,
+): Promise<getPointStatResponse> => {
+  return customFetch<getPointStatResponse>(getGetPointStatUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+/**
+ * @summary Claim point
+ */
+export type postClaimPointResponse200 = {
+  data: PostClaimPoint200;
+  status: 200;
+};
+
+export type postClaimPointResponse400 = {
+  data: PostClaimPoint400;
+  status: 400;
+};
+
+export type postClaimPointResponseSuccess = postClaimPointResponse200 & {
+  headers: Headers;
+};
+export type postClaimPointResponseError = postClaimPointResponse400 & {
+  headers: Headers;
+};
+
+export type postClaimPointResponse =
+  | postClaimPointResponseSuccess
+  | postClaimPointResponseError;
+
+export const getPostClaimPointUrl = () => {
+  return `/v1/point/claim`;
+};
+
+export const postClaimPoint = async (
+  options?: RequestInit,
+): Promise<postClaimPointResponse> => {
+  return customFetch<postClaimPointResponse>(getPostClaimPointUrl(), {
+    ...options,
+    method: "POST",
   });
 };
 

@@ -4,7 +4,7 @@ import {
   jsonb,
   text,
   timestamp,
-  uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { schema } from "./schema";
 import { relations } from "drizzle-orm";
@@ -13,7 +13,7 @@ import { users } from "./users";
 export const pointLogs = schema.table(
   "point_logs",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: varchar("id", { length: 27 }).primaryKey(), // KSUID
     userAddress: text("address").notNull(),
 
     // 포인트 변동량 (음수/양수 모두 가능)

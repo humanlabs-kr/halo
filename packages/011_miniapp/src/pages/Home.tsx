@@ -5,6 +5,7 @@ import { getSafeAreaInsetsBottom } from "../utils/device";
 import { sendLightImpactHaptic } from "../components/hapticFeedback";
 import Onboarding from "./Onboarding";
 import { useWorldAuthStore } from "@/utils/state/use-world-auth-store";
+import { useGetPointStat } from "@/lib/generated/react-query";
 
 const progressList = [
   { label: "Daily Scans", value: "1/5", ratio: 0.2 },
@@ -51,13 +52,14 @@ function Home() {
 
 function HomeHeader() {
   const { user } = useWorldAuthStore();
-  
-  // TODO: Replace with actual API data
-  const currentPoints = 15000;
-  const accumulatedHistoricalPoints = 25000;
-  
+
+  const { data: pointStat } = useGetPointStat();
+
+  const currentPoints = pointStat?.currentPoint ?? 0;
+  const accumulatedHistoricalPoints = pointStat?.accumulatedPoint ?? 0;
+
   const userLevel = calculateLevel(accumulatedHistoricalPoints);
-  
+
   return (
     <header className="flex items-center justify-between px-2 pt-1">
       <div className="flex items-center gap-3">
@@ -167,7 +169,7 @@ function PromoCard() {
   const navigate = useNavigate();
 
   return (
-    <article 
+    <article
       className="pressed relative min-h-[340px] overflow-hidden rounded-[32px] bg-[#FFAAAA]/20 p-5 text-card-text cursor-pointer"
       onClick={() => {
         sendLightImpactHaptic();

@@ -218,6 +218,44 @@ export type GetListReceipts400 = {
   message: string;
 };
 
+export type GetPointStat200 = {
+  accumulatedPoint: number;
+  currentPoint: number;
+  claimablePoint: number;
+};
+
+export type GetPointStat400Code =
+  (typeof GetPointStat400Code)[keyof typeof GetPointStat400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const GetPointStat400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type GetPointStat400 = {
+  code: GetPointStat400Code;
+  message: string;
+};
+
+export type PostClaimPoint200 = {
+  accumulatedPoint: number;
+  currentPoint: number;
+  claimablePoint: number;
+};
+
+export type PostClaimPoint400Code =
+  (typeof PostClaimPoint400Code)[keyof typeof PostClaimPoint400Code];
+
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export const PostClaimPoint400Code = {
+  BAD_REQUEST: "BAD_REQUEST",
+} as const;
+
+export type PostClaimPoint400 = {
+  code: PostClaimPoint400Code;
+  message: string;
+};
+
 export type PostTestReceiptImageAnalysisBody = {
   file: Blob;
 };
@@ -1336,6 +1374,212 @@ export function useGetViewR2Image<
 
   return query;
 }
+
+/**
+ * @summary Get point stat
+ */
+const getPointStat = (signal?: AbortSignal) => {
+  return customInstance<GetPointStat200>({
+    url: `/v1/point/stat`,
+    method: "GET",
+    signal,
+  });
+};
+
+export const getGetPointStatQueryKey = () => {
+  return [`/v1/point/stat`] as const;
+};
+
+export const getGetPointStatQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPointStat>>,
+  TError = GetPointStat400,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getPointStat>>, TError, TData>
+  >;
+}) => {
+  const { query: queryOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPointStatQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPointStat>>> = ({
+    signal,
+  }) => getPointStat(signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPointStat>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPointStatQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPointStat>>
+>;
+export type GetPointStatQueryError = GetPointStat400;
+
+export function useGetPointStat<
+  TData = Awaited<ReturnType<typeof getPointStat>>,
+  TError = GetPointStat400,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPointStat>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPointStat>>,
+          TError,
+          Awaited<ReturnType<typeof getPointStat>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetPointStat<
+  TData = Awaited<ReturnType<typeof getPointStat>>,
+  TError = GetPointStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPointStat>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPointStat>>,
+          TError,
+          Awaited<ReturnType<typeof getPointStat>>
+        >,
+        "initialData"
+      >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useGetPointStat<
+  TData = Awaited<ReturnType<typeof getPointStat>>,
+  TError = GetPointStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPointStat>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary Get point stat
+ */
+
+export function useGetPointStat<
+  TData = Awaited<ReturnType<typeof getPointStat>>,
+  TError = GetPointStat400,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPointStat>>, TError, TData>
+    >;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getGetPointStatQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey;
+
+  return query;
+}
+
+/**
+ * @summary Claim point
+ */
+const postClaimPoint = (signal?: AbortSignal) => {
+  return customInstance<PostClaimPoint200>({
+    url: `/v1/point/claim`,
+    method: "POST",
+    signal,
+  });
+};
+
+export const getPostClaimPointMutationOptions = <
+  TError = PostClaimPoint400,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof postClaimPoint>>,
+    TError,
+    void,
+    TContext
+  >;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof postClaimPoint>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["postClaimPoint"];
+  const { mutation: mutationOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey } };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof postClaimPoint>>,
+    void
+  > = () => {
+    return postClaimPoint();
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PostClaimPointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof postClaimPoint>>
+>;
+
+export type PostClaimPointMutationError = PostClaimPoint400;
+
+/**
+ * @summary Claim point
+ */
+export const usePostClaimPoint = <
+  TError = PostClaimPoint400,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof postClaimPoint>>,
+      TError,
+      void,
+      TContext
+    >;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof postClaimPoint>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationOptions = getPostClaimPointMutationOptions(options);
+
+  return useMutation(mutationOptions, queryClient);
+};
 
 /**
  * @summary Test receipt image analysis

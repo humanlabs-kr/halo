@@ -21,6 +21,8 @@ import { ViewR2Image } from './endpoints/receipt/view-r2-image';
 import { TestR2Upload } from './endpoints/admin/test/upload-to-r2';
 import { AdminImpersonate } from './endpoints/admin/test/impersonate';
 import { ListReceipts } from './endpoints/receipt/list';
+import { PointStat } from './endpoints/point/stat';
+import { ClaimPoint } from './endpoints/point/claim';
 
 const v1Routes = fromHono(new Hono());
 
@@ -33,6 +35,9 @@ v1Routes.post('/receipts', jwtAuthMiddleware, ScanUploadReceipt as any);
 v1Routes.get('/receipts', jwtAuthMiddleware, ListReceipts as any);
 v1Routes.get('/receipts/:receiptId/image/synapse', ViewSynapseImage as any);
 v1Routes.get('/receipts/:receiptId/image/r2', ViewR2Image as any);
+
+v1Routes.get('/point/stat', jwtAuthMiddleware, PointStat as any);
+v1Routes.post('/point/claim', jwtAuthMiddleware, ClaimPoint as any);
 
 v1Routes.post('/admin/test/image-analysis', adminAuthMiddleware, TestReceiptImageAnalysis as any);
 v1Routes.post('/admin/test/r2-upload', adminAuthMiddleware, TestR2Upload as any);

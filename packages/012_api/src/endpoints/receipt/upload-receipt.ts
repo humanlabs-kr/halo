@@ -7,6 +7,7 @@ import { waitUntil } from 'cloudflare:workers';
 import { receiptImages, receipts } from '@hl/database';
 import { randomUUID } from 'crypto';
 import { FluenceOcrQueue, ReceiptAnalysisQueue, SynapseUploadQueue } from 'workers/queues';
+import KSUID from 'ksuid';
 
 export class ScanUploadReceipt extends OpenAPIRoute {
 	schema = {
@@ -66,7 +67,7 @@ export class ScanUploadReceipt extends OpenAPIRoute {
 
 		const { receiptId, receiptImageIds } = await c.get('db').transaction(async (tx) => {
 			// create a receipt row
-			const receiptId = randomUUID();
+			const receiptId = KSUID.randomSync().string;
 			await tx.insert(receipts).values({
 				id: receiptId,
 				userAddress,

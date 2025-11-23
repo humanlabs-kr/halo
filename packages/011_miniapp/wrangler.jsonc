@@ -29,7 +29,7 @@
     "production": {
       "name": "receipto-miniapp-prod",
       "route": {
-        "pattern": "miniapp.receipto.humanlabs.world",
+        "pattern": "miniapp.halo.humanlabs.world",
         "zone_name": "humanlabs.world",
         "custom_domain": true
       },

@@ -15,7 +15,7 @@ import { relations } from "drizzle-orm";
 export const receiptImages = schema.table("receipt_images", {
   id: uuid("id").primaryKey().defaultRandom(),
   numOrder: integer("num_order").notNull(),
-  receiptId: uuid("receipt_id")
+  receiptId: varchar("receipt_id", { length: 27 })
     .references(() => receipts.id, { onDelete: "cascade" })
     .notNull(),
 

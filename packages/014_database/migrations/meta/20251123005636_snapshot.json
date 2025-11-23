@@ -1,6 +1,6 @@
 {
-  "id": "591ba28f-60ee-47e7-84a8-7ea41e89df51",
-  "prevId": "b54f327a-691f-4ee7-89c4-dd699cccd5a0",
+  "id": "c57e7bd2-2034-49b7-8f64-29346201b287",
+  "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -68,10 +68,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "varchar(27)",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "user_address": {
           "name": "user_address",
@@ -155,7 +154,7 @@
         },
         "point_log_id": {
           "name": "point_log_id",
-          "type": "uuid",
+          "type": "varchar(27)",
           "primaryKey": false,
           "notNull": false
         },
@@ -229,7 +228,7 @@
         },
         "receipt_id": {
           "name": "receipt_id",
-          "type": "uuid",
+          "type": "varchar(27)",
           "primaryKey": false,
           "notNull": true
         },
@@ -324,10 +323,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "uuid",
+          "type": "varchar(27)",
           "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
+          "notNull": true
         },
         "address": {
           "name": "address",

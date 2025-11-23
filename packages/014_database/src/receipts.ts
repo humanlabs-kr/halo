@@ -13,7 +13,7 @@ import { receiptImages } from "./receipt-images";
 import { pointLogs } from "./point-logs";
 
 export const receipts = schema.table("receipts", {
-  id: uuid("id").primaryKey().defaultRandom(),
+  id: varchar("id", { length: 27 }).primaryKey(),
 
   userAddress: varchar("user_address", { length: 255 })
     .references(() => users.address, { onDelete: "restrict" })
@@ -45,9 +45,12 @@ export const receipts = schema.table("receipts", {
   }),
   analysisError: text("analysis_error"),
 
-  pointLogId: uuid("point_log_id").references(() => pointLogs.id, {
-    onDelete: "restrict",
-  }),
+  pointLogId: varchar("point_log_id", { length: 27 }).references(
+    () => pointLogs.id,
+    {
+      onDelete: "restrict",
+    }
+  ),
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()

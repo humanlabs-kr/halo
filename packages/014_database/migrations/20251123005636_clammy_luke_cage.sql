@@ -1,5 +1,16 @@
+--> statement-breakpoint
+CREATE TABLE "receipto"."users" (
+	"address" varchar(255) PRIMARY KEY NOT NULL,
+	"username" text NOT NULL,
+	"profile_picture_url" text,
+	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
+	"updated_at" timestamp with time zone,
+	"verification_level" text DEFAULT 'none' NOT NULL,
+	"checksum_address" varchar(255) DEFAULT '' NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "receipto"."receipts" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" varchar(27) PRIMARY KEY NOT NULL,
 	"user_address" varchar(255) NOT NULL,
 	"status" varchar(20) DEFAULT 'pending' NOT NULL,
 	"assigned_point" integer DEFAULT 0 NOT NULL,
@@ -13,7 +24,7 @@ CREATE TABLE "receipto"."receipts" (
 	"analysis_started_at" timestamp with time zone,
 	"analysis_completed_at" timestamp with time zone,
 	"analysis_error" text,
-	"point_log_id" uuid,
+	"point_log_id" varchar(27),
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone
 );
@@ -21,7 +32,7 @@ CREATE TABLE "receipto"."receipts" (
 CREATE TABLE "receipto"."receipt_images" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"num_order" integer NOT NULL,
-	"receipt_id" uuid NOT NULL,
+	"receipt_id" varchar(27) NOT NULL,
 	"synapse_upload_started_at" timestamp with time zone,
 	"synapse_upload_completed_at" timestamp with time zone,
 	"synapse_piece_cid" varchar(255),
@@ -35,7 +46,7 @@ CREATE TABLE "receipto"."receipt_images" (
 );
 --> statement-breakpoint
 CREATE TABLE "receipto"."point_logs" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"id" varchar(27) PRIMARY KEY NOT NULL,
 	"address" text NOT NULL,
 	"diff" integer NOT NULL,
 	"after_balance" integer NOT NULL,
@@ -61,7 +72,6 @@ CREATE TABLE "receipto"."point_claims" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-DROP TABLE "receipto"."receipt" CASCADE;--> statement-breakpoint
 ALTER TABLE "receipto"."receipts" ADD CONSTRAINT "receipts_user_address_users_address_fk" FOREIGN KEY ("user_address") REFERENCES "receipto"."users"("address") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "receipto"."receipts" ADD CONSTRAINT "receipts_point_log_id_point_logs_id_fk" FOREIGN KEY ("point_log_id") REFERENCES "receipto"."point_logs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "receipto"."receipt_images" ADD CONSTRAINT "receipt_images_receipt_id_receipts_id_fk" FOREIGN KEY ("receipt_id") REFERENCES "receipto"."receipts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint

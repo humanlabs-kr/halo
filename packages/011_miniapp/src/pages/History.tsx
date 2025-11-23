@@ -10,6 +10,7 @@ import {
   GetListReceipts200ListItem,
   GetListReceipts200ListItemStatus,
   useGetListReceipts,
+  useGetPointStat,
 } from "@/lib/generated/react-query";
 
 import dayjs from "dayjs";
@@ -32,19 +33,10 @@ function History() {
     },
   });
 
-  // TODO: 클레임 포인트 API 연동 전 임시 코드
+  const { data: pointStat } = useGetPointStat();
+
   const [showClaimModal, setShowClaimModal] = useState(false);
-  const claimablePoints = 0;
-  // useMemo(
-  //   () =>
-  //     receipts.reduce((sum, item) => {
-  //       if (item.status === "claimable" && typeof item.points === "number") {
-  //         return sum + item.points;
-  //       }
-  //       return sum;
-  //     }, 0),
-  //   [receipts]
-  // );
+  const claimablePoints = pointStat?.claimablePoint ?? 0;
 
   return (
     <div className="flex h-full flex-col bg-white text-black pb-4">
@@ -66,6 +58,8 @@ function History() {
                 <ReceiptCellSkeleton key={index} />
               ))}
             </>
+          ) : listReceiptsQueryResult.data?.list.length === 0 ? (
+            <EmptyState />
           ) : (
             listReceiptsQueryResult.data?.list.map((item) => (
               <ReceiptCell key={item.id} item={item} />
@@ -132,7 +126,9 @@ function ReadyCard({
 function ResultsToolbar({ total }: { total: number }) {
   return (
     <div className="mt-5.5 flex items-center justify-between px-1.5">
-      <p className="text-base font-semibold text-black">{total} Results</p>
+      <p className="text-base font-semibold text-black">
+        {total > 0 ? `${total} Results` : "No results"}
+      </p>
       <button
         type="button"
         className="flex items-center gap-1 text-xs font-semibold text-black"
@@ -242,6 +238,33 @@ function getScoreColor(score: number) {
   if (score < 40) return "#F9706A";
   if (score < 70) return "#F5B10A";
   return "#4BCD10";
+}
+
+function EmptyState() {
+  return (
+    <div className="mt-8 flex flex-col items-center justify-center py-12">
+      <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-[#F4F4F4]">
+        <img
+          src="/u_receipt.svg"
+          alt="Receipt"
+          className="h-8 w-8 opacity-40"
+        />
+      </div>
+      <p className="mb-1.5 text-base font-semibold text-black">
+        No receipts yet
+      </p>
+      <p className="mb-6 text-center text-sm text-[#8D8D8D]">
+        Start scanning receipts to earn rewards
+      </p>
+      <Link
+        to="/camera-scan"
+        className="rounded-full bg-black px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-black/90"
+        onClick={() => sendLightImpactHaptic()}
+      >
+        Scan Receipt
+      </Link>
+    </div>
+  );
 }
 
 function ReceiptCellSkeleton() {

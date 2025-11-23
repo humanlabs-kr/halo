@@ -121,7 +121,7 @@
     "production": {
       "name": "receipto-api-prod",
       "route": {
-        "pattern": "api.receipto.humanlabs.world",
+        "pattern": "api.halo.humanlabs.world",
         "zone_name": "humanlabs.world",
         "custom_domain": true
       },
