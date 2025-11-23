@@ -321,22 +321,26 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
 
       </div>
 
-      {/* Bottom Button - Fixed */}
-      <div 
-        className="fixed left-0 right-0 z-40 px-4"
-        style={{ bottom: 42 }}
-      >
-        <button
-          type="button"
-          onClick={handlePrimaryCTA}
-          className="w-full rounded-full bg-black py-4 text-base font-semibold text-white"
-        >
-          Get Started
-        </button>
-      </div>
-      
-      {/* Spacer to prevent content from being hidden behind fixed button */}
-      <div className="h-24" />
+      {/* Bottom Button - Fixed - Only show on last step */}
+      {currentStep === totalSteps - 1 && (
+        <>
+          <div 
+            className="fixed left-0 right-0 z-40 px-4"
+            style={{ bottom: 42 }}
+          >
+            <button
+              type="button"
+              onClick={handlePrimaryCTA}
+              className="w-full rounded-full bg-black py-4 text-base font-semibold text-white"
+            >
+              Get Started
+            </button>
+          </div>
+          
+          {/* Spacer to prevent content from being hidden behind fixed button */}
+          <div className="h-24" />
+        </>
+      )}
     </div>
   );
 }
