@@ -25,19 +25,19 @@ const INITIAL_COUNTDOWN =
 const RESET_INTERVAL = 24 * 60 * 60 * 1000
 
 const dailyRewards: DailyReward[] = [
-  { id: 'tier-1', amountLabel: '10 USDC', pointsLabel: 'Use 15,000pts', status: 'claimable' },
+  { id: 'tier-1', amountLabel: '10 USDC', pointsLabel: 'Use 15,000pts', status: 'closed' }, // claimable
   { id: 'tier-2', amountLabel: '4 USDC', pointsLabel: 'Use 5,600pts', status: 'closed' },
-  { id: 'tier-3', amountLabel: '2 USDC', pointsLabel: 'Use 3,200pts', status: 'claimed' },
+  { id: 'tier-3', amountLabel: '2 USDC', pointsLabel: 'Use 3,200pts', status: 'closed' }, // claimed
   { id: 'tier-4', amountLabel: '1 USDC', pointsLabel: 'Use 1,800pts', status: 'closed' },
   { id: 'tier-5', amountLabel: '0.5 USDC', pointsLabel: 'Use 1,000pts', status: 'closed' },
 ]
 
 const raffleRewards: RaffleReward[] = [
-  { id: 'raffle-10', reward: '10 USDC', entry: 'Use 300pts', note: 'Max 3 entries per day', status: 'enter' },
-  { id: 'raffle-4', reward: '4 USDC', entry: 'Use 250pts', note: 'Unlimited entries', status: 'enter' },
-  { id: 'raffle-3', reward: '3 USDC', entry: 'Use 200pts', note: 'Unlimited entries', status: 'enter' },
-  { id: 'raffle-2', reward: '2 USDC', entry: 'Use 150pts', note: 'Unlimited entries', status: 'enter' },
-  { id: 'raffle-1', reward: '1 USDC', entry: 'Use 100pts', note: 'Unlimited entries', status: 'enter' },
+  { id: 'raffle-10', reward: '10 USDC', entry: 'Use 300pts', note: 'Max 3 entries per day', status: 'closed' }, // enter
+  { id: 'raffle-4', reward: '4 USDC', entry: 'Use 250pts', note: 'Unlimited entries', status: 'closed' },
+  { id: 'raffle-3', reward: '3 USDC', entry: 'Use 200pts', note: 'Unlimited entries', status: 'closed' },
+  { id: 'raffle-2', reward: '2 USDC', entry: 'Use 150pts', note: 'Unlimited entries', status: 'closed' },
+  { id: 'raffle-1', reward: '1 USDC', entry: 'Use 100pts', note: 'Unlimited entries', status: 'closed' },
 ]
 
 function Rewards() {
@@ -86,7 +86,7 @@ function Rewards() {
 
         <SectionHeading
           title="Daily Claim Pool"
-          subtitle="Refills hourly, limited to 1 claim per 24 hours."
+          subtitle="Refills daily, limited to 1 claim per 48 hours."
         />
         <div className="mt-3 space-y-2">
           {dailyRewards.map((reward) => (
@@ -113,6 +113,20 @@ function Rewards() {
 type CountdownProps = { hours: string; minutes: string; seconds: string }
 
 function CountdownCard({ hours, minutes, seconds }: CountdownProps) {
+  // temp: show placeholder message while BE API & contract is WIP
+  const showPlaceholder = true
+
+  if (showPlaceholder) {
+    return (
+      <section className="mt-4 rounded-[28px] bg-[#292929] px-6 py-8 text-white">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <p className="text-xl font-semibold text-white">Coming Soon</p>
+          <p className="text-sm text-white/70">Available in December</p>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="mt-4 rounded-[28px] bg-[#292929] px-6 py-4 text-white">
       <div className="flex items-center justify-between gap-3 text-white max-w-[280px] mx-auto">
