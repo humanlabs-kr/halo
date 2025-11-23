@@ -22,38 +22,38 @@ const queryClient = new QueryClient({
   },
 });
 
-// if (import.meta.env.VITE_PROJECT_ENV !== "production") {
-import("eruda").then((eruda) => {
-  const erudaInstance = eruda.default;
+if (import.meta.env.VITE_PROJECT_ENV !== "production") {
+  import("eruda").then((eruda) => {
+    const erudaInstance = eruda.default;
 
-  erudaInstance.init();
-  const snippets = erudaInstance.get("snippets");
-  snippets.clear();
-  snippets.add(
-    "Logout",
-    () => {
-      callApi(postAuthSessionRevoke).then(() => {
-        location.reload();
-      });
-    },
-    "Logout from current auth session"
-  );
-  snippets.add(
-    "Change language",
-    () => {
-      i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
-    },
-    "Change language to English or Korean"
-  );
-  snippets.add(
-    "Reset onboarding",
-    () => {
-      resetOnboardingFlag();
-    },
-    "Reset onboarding flag"
-  );
-});
-// }
+    erudaInstance.init();
+    const snippets = erudaInstance.get("snippets");
+    snippets.clear();
+    snippets.add(
+      "Logout",
+      () => {
+        callApi(postAuthSessionRevoke).then(() => {
+          location.reload();
+        });
+      },
+      "Logout from current auth session"
+    );
+    snippets.add(
+      "Change language",
+      () => {
+        i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
+      },
+      "Change language to English or Korean"
+    );
+    snippets.add(
+      "Reset onboarding",
+      () => {
+        resetOnboardingFlag();
+      },
+      "Reset onboarding flag"
+    );
+  });
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
