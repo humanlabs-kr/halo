@@ -61,7 +61,7 @@ function Login() {
         <HumanPassLink />
         <button
           type="button"
-          className="w-full rounded-full bg-black py-4 text-base font-semibold text-white"
+          className={`w-full rounded-full bg-black py-4 text-base font-semibold text-white ${isLoading ? "opacity-50" : ""}`}
           onClick={handleSignIn}
           disabled={isLoading}
         >

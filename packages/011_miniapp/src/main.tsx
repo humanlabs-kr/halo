@@ -12,6 +12,7 @@ import { postAuthSessionRevoke } from "./lib/generated/fetch.ts";
 import { callApi } from "./lib/fetch-client.ts";
 import { RouteRoot } from "./route.tsx";
 import i18n from "./utils/i18n.ts";
+import { resetOnboardingFlag } from "./utils/onboardingStorage.ts";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,13 @@ if (import.meta.env.VITE_PROJECT_ENV !== "production") {
         i18n.changeLanguage(i18n.language === "en-US" ? "ko-KR" : "en-US");
       },
       "Change language to English or Korean"
+    );
+    snippets.add(
+      "Reset onboarding",
+      () => {
+        resetOnboardingFlag();
+      },
+      "Reset onboarding flag"
     );
   });
 }

@@ -147,10 +147,6 @@ export const useWorldAuthStore = create<WorldAuthStore>()(
               return { success: false, error: "failed due to exception" };
             }
 
-            set({
-              isAuthenticated: false,
-              isLoading: false,
-            });
             await get().checkSession();
             return { success: true };
           },

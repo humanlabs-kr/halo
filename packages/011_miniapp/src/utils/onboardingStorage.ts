@@ -1,25 +1,25 @@
-const ONBOARDING_STORAGE_KEY = 'receipto:onboardingComplete'
+const ONBOARDING_STORAGE_KEY = "receipto:onboardingComplete";
 
-const canUseStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+const canUseStorage = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 
 export const hasCompletedOnboarding = () => {
   if (!canUseStorage()) {
-    return false
+    return false;
   }
-  return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === 'true'
-}
+  return window.localStorage.getItem(ONBOARDING_STORAGE_KEY) === "true";
+};
 
 export const setOnboardingCompleted = () => {
   if (!canUseStorage()) {
-    return
+    return;
   }
-  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, 'true')
-}
+  window.localStorage.setItem(ONBOARDING_STORAGE_KEY, "true");
+};
 
 export const resetOnboardingFlag = () => {
   if (!canUseStorage()) {
-    return
+    return;
   }
-  window.localStorage.removeItem(ONBOARDING_STORAGE_KEY)
-}
-
+  window.localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+};

@@ -28,13 +28,15 @@ const ONBOARDING_STEPS: Array<{
 }> = [
   {
     title: "Scan any receipt",
-    subtitle: "Any store, any format, any time. Take a snap of your receipt whenever you please.",
+    subtitle:
+      "Any store, any format, any time. Take a snap of your receipt whenever you please.",
     heroImage: "/onboarding/step-2.webp",
     cards: [],
   },
   {
     title: "Check your receipt history",
-    subtitle: "Each scan will be analyzed anonymously and be scored on image quality.",
+    subtitle:
+      "Each scan will be analyzed anonymously and be scored on image quality.",
     heroImage: "/onboarding/step-2.webp",
     cards: [
       {
@@ -62,7 +64,8 @@ const ONBOARDING_STEPS: Array<{
   },
   {
     title: "Swap points for USDC rewards",
-    subtitle: "Stack your points and claim the USDC rewards. More points will unlock better rates!",
+    subtitle:
+      "Stack your points and claim the USDC rewards. More points will unlock better rates!",
     heroImage: "/onboarding/step-3.webp",
     cards: [
       {
@@ -187,7 +190,7 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
       setOnboardingCompleted();
       navigate("/home", { replace: true });
     }
-  }
+  };
 
   useEffect(() => {
     if (timerRef.current) {
@@ -228,7 +231,7 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
 
   return (
     <div
-      className={`flex flex-col bg-[#E6F3FF] text-black ${onClose ? 'min-h-full' : 'min-h-screen'}`}
+      className={`flex flex-col bg-[#E6F3FF] text-black ${onClose ? "min-h-full" : "min-h-screen"}`}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={handleScreenClick}
@@ -269,7 +272,10 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
           <h1 className="text-2xl font-bold leading-tight text-[#0F172A] animate-fade-in">
             {step.title}
           </h1>
-          <p className="mt-3 px-4 text-base text-[#54607A] animate-fade-in" style={{ animationDelay: "150ms" }}>
+          <p
+            className="mt-3 px-4 text-base text-[#54607A] animate-fade-in"
+            style={{ animationDelay: "150ms" }}
+          >
             {step.subtitle}
           </p>
         </div>
@@ -297,7 +303,8 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
           <div
             className="pointer-events-none absolute inset-x-0 bottom-0 h-32 rounded-bl-[32px] rounded-br-[32px]"
             style={{
-              background: "linear-gradient(to bottom, rgba(255,255,255,0) 0%, #E6F3FF 95%)",
+              background:
+                "linear-gradient(to bottom, rgba(255,255,255,0) 0%, #E6F3FF 95%)",
             }}
           />
           <div className="pointer-events-none absolute inset-x-0 bottom-[10px] flex flex-col gap-2 px-3 min-h-[140px]">
@@ -318,13 +325,12 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
             )}
           </div>
         </div>
-
       </div>
 
       {/* Bottom Button - Fixed - Only show on last step */}
       {currentStep === totalSteps - 1 && (
         <>
-          <div 
+          <div
             className="fixed left-0 right-0 z-40 px-4"
             style={{ bottom: 42 }}
           >
@@ -336,7 +342,7 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
               Get Started
             </button>
           </div>
-          
+
           {/* Spacer to prevent content from being hidden behind fixed button */}
           <div className="h-24" />
         </>
@@ -347,7 +353,13 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
 
 export default Onboarding;
 
-function HistoryPreviewCard({ card, delay }: { card: HistoryCard; delay: number }) {
+function HistoryPreviewCard({
+  card,
+  delay,
+}: {
+  card: HistoryCard;
+  delay: number;
+}) {
   return (
     <div
       className="flex items-center justify-between rounded-[22px] bg-[#F7F9FF] px-4 py-3 shadow-inner animate-slide-up"
@@ -356,7 +368,9 @@ function HistoryPreviewCard({ card, delay }: { card: HistoryCard; delay: number 
       <div className="flex items-center gap-3">
         <ScoreBadge score={card.score} />
         <div>
-          <p className="text-sm font-semibold text-[#0F172A]">{card.merchant}</p>
+          <p className="text-sm font-semibold text-[#0F172A]">
+            {card.merchant}
+          </p>
           <p className="text-xs text-[#6B7280]">{card.detail}</p>
         </div>
       </div>
@@ -364,15 +378,21 @@ function HistoryPreviewCard({ card, delay }: { card: HistoryCard; delay: number 
         <p className="text-sm font-semibold text-black">{card.points} Pt</p>
       </div>
     </div>
-  )
+  );
 }
 
-function RewardPreviewCard({ card, delay }: { card: RewardCard; delay: number }) {
+function RewardPreviewCard({
+  card,
+  delay,
+}: {
+  card: RewardCard;
+  delay: number;
+}) {
   const statusConfig = {
     claimable: { label: "Claim", styles: "bg-black text-white" },
     closed: { label: "Closed", styles: "bg-[#D6D6D6] text-white" },
     claimed: { label: "Claimed", styles: "bg-[#D6D6D6] text-white" },
-  }[card.status]
+  }[card.status];
 
   return (
     <div
@@ -383,20 +403,29 @@ function RewardPreviewCard({ card, delay }: { card: RewardCard; delay: number })
         <p className="text-sm font-semibold text-black">{card.amountLabel}</p>
         <p className="text-xs text-[#8D8D8D]">{card.pointsLabel}</p>
       </div>
-      <div className={`rounded-full px-4 py-1 text-xs font-semibold ${statusConfig.styles}`}>
+      <div
+        className={`rounded-full px-4 py-1 text-xs font-semibold ${statusConfig.styles}`}
+      >
         {statusConfig.label}
       </div>
     </div>
-  )
+  );
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const clamped = Math.min(Math.max(score, 0), 100)
-  const tone = getScoreColor(clamped)
+  const clamped = Math.min(Math.max(score, 0), 100);
+  const tone = getScoreColor(clamped);
   return (
     <div className="relative flex size-[42px] items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(15,23,42,0.08)]">
       <svg viewBox="0 0 40 40" className="absolute inset-0">
-        <circle cx="20" cy="20" r="16" stroke="#E5E7EB" strokeWidth="4" fill="none" />
+        <circle
+          cx="20"
+          cy="20"
+          r="16"
+          stroke="#E5E7EB"
+          strokeWidth="4"
+          fill="none"
+        />
         <circle
           cx="20"
           cy="20"
@@ -414,11 +443,11 @@ function ScoreBadge({ score }: { score: number }) {
         {clamped}
       </span>
     </div>
-  )
+  );
 }
 
 function getScoreColor(score: number) {
-  if (score < 40) return "#F9706A"
-  if (score < 70) return "#F5B10A"
-  return "#4BCD10"
+  if (score < 40) return "#F9706A";
+  if (score < 70) return "#F5B10A";
+  return "#4BCD10";
 }
