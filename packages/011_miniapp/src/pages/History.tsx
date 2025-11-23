@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import PageHeader from "../components/PageHeader";
 import ClaimSuccessModal from "../components/ClaimSuccessModal";
+import ImageQualityCriteriaModal from "../components/ImageQualityCriteriaModal";
 import {
   sendLightImpactHaptic,
   sendSuccessNotificationHaptic,
@@ -46,6 +47,8 @@ function History() {
   });
 
   const [showClaimModal, setShowClaimModal] = useState(false);
+  const [showQualityCriteriaModal, setShowQualityCriteriaModal] =
+    useState(false);
   const claimablePoints = pointStat?.claimablePoint ?? 0;
 
   const [claimedPoints, setClaimedPoints] = useState(0);
@@ -77,7 +80,11 @@ function History() {
             <EmptyState />
           ) : (
             listReceiptsQueryResult.data?.list.map((item) => (
-              <ReceiptCell key={item.id} item={item} />
+              <ReceiptCell
+                key={item.id}
+                item={item}
+                onRejectedClick={() => setShowQualityCriteriaModal(true)}
+              />
             ))
           )}
         </div>
@@ -86,6 +93,11 @@ function History() {
         <ClaimSuccessModal
           points={claimedPoints}
           onClose={() => setShowClaimModal(false)}
+        />
+      )}
+      {showQualityCriteriaModal && (
+        <ImageQualityCriteriaModal
+          onClose={() => setShowQualityCriteriaModal(false)}
         />
       )}
     </div>
@@ -193,7 +205,13 @@ function ResultsToolbar({ total }: { total: number }) {
   );
 }
 
-function ReceiptCell({ item }: { item: GetListReceipts200ListItem }) {
+function ReceiptCell({
+  item,
+  onRejectedClick,
+}: {
+  item: GetListReceipts200ListItem;
+  onRejectedClick?: () => void;
+}) {
   const meta = statusMeta[item.status];
 
   const handleClick = () => {
@@ -220,7 +238,13 @@ function ReceiptCell({ item }: { item: GetListReceipts200ListItem }) {
 
   if (item.status === "rejected") {
     return (
-      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+      <article
+        className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5 cursor-pointer"
+        onClick={() => {
+          sendLightImpactHaptic();
+          onRejectedClick?.();
+        }}
+      >
         <div className="flex items-center gap-3.5">
           <ScoreBadge score={0} />
           <div>
