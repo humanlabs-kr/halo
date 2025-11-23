@@ -28,19 +28,22 @@
         "queue": "receipto-dev-receipt-analysis",
         "max_batch_size": 1,
         "retry_delay": 10000,
-        "max_concurrency": 30
+        "max_concurrency": 30,
+        "max_batch_timeout": 0
       },
       {
         "queue": "receipto-dev-synapse-upload",
         "max_batch_size": 1,
         "retry_delay": 10000,
         "max_concurrency": 30,
+        "max_batch_timeout": 0
       },
       {
         "queue": "receipto-dev-fluence-ocr",
         "max_batch_size": 1,
         "retry_delay": 10000,
         "max_concurrency": 10,
+        "max_batch_timeout": 0
       }
     ],
     "producers": [
@@ -87,19 +90,22 @@
             "queue": "receipto-staging-receipt-analysis",
             "max_batch_size": 1,
             "retry_delay": 10000,
-            "max_concurrency": 30
+            "max_concurrency": 30,
+            "max_batch_timeout": 0
           },
           {
             "queue": "receipto-staging-synapse-upload",
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 30,
+            "max_batch_timeout": 0
           },
           {
             "queue": "receipto-staging-fluence-ocr",
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 10,
+            "max_batch_timeout": 0
           }
         ],
         "producers": [
@@ -146,19 +152,22 @@
             "queue": "receipto-receipt-analysis",
             "max_batch_size": 1,
             "retry_delay": 10000,
-            "max_concurrency": 30
+            "max_concurrency": 30,
+            "max_batch_timeout": 0
           },
           {
             "queue": "receipto-synapse-upload",
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 30,
+            "max_batch_timeout": 0
           },
           {
             "queue": "receipto-fluence-ocr",
             "max_batch_size": 1,
             "retry_delay": 10000,
             "max_concurrency": 10,
+            "max_batch_timeout": 0
           }
         ],
         "producers": [
