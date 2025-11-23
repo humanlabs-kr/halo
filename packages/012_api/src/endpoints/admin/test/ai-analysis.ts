@@ -43,6 +43,7 @@ export class TestReceiptImageAnalysis extends OpenAPIRoute {
 									type: 'string',
 									format: 'binary',
 								}),
+							country: z.string(),
 						}),
 					},
 				},
@@ -94,6 +95,7 @@ export class TestReceiptImageAnalysis extends OpenAPIRoute {
 	async handle(c: AppContext) {
 		const fd = await c.req.formData();
 		const rawFile = fd.get('file');
+		const country = fd.get('country') as string;
 
 		if (!rawFile || !(rawFile instanceof File)) {
 			return c.json({ error: 'file must be a file' }, 400);
@@ -103,7 +105,7 @@ export class TestReceiptImageAnalysis extends OpenAPIRoute {
 			const arrayBuffer = await rawFile.arrayBuffer();
 			const inputBytes = new Uint8Array(arrayBuffer);
 
-			const receiptData = await ReceiptProcessor.process(inputBytes);
+			const receiptData = await ReceiptProcessor.process([inputBytes], country);
 
 			return receiptData;
 		} catch (error) {

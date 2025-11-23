@@ -1,5 +1,5 @@
 import { contentJson, OpenAPIRoute } from 'chanfana';
-import { SynapseConfig } from 'workers/services/synapse/config';
+import { Synapse } from 'workers/services/synapse';
 import { AppContext } from 'workers/types';
 import z from 'zod';
 
@@ -27,19 +27,10 @@ export class AdminSynapseSetup extends OpenAPIRoute {
 
 	async handle(c: AppContext) {
 		const data = await this.getValidatedData<typeof this.schema>();
-		if (!c.req.header('Authorization')?.includes('IAMADMIN')) {
-			return c.json(
-				{
-					code: 'UNAUTHORIZED',
-					message: 'Unauthorized',
-				},
-				401,
-			);
-		}
 
 		const { amount } = data.body;
 
-		await SynapseConfig.setup(amount);
+		await Synapse.setup(amount);
 
 		return c.json({
 			success: true,

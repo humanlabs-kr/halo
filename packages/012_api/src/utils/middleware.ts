@@ -1,5 +1,6 @@
 import { Context, Next } from 'hono';
 import { verifyAccessToken } from './jwt';
+import { env } from 'cloudflare:workers';
 
 function parseCookie(cookie: string | undefined) {
 	if (!cookie) return new Map();
@@ -45,7 +46,7 @@ export const adminAuthMiddleware = async (c: Context, next: Next) => {
 		return c.json({ code: 'UNAUTHORIZED', error: 'Unauthorized - Authentication required' }, 401);
 	}
 
-	if (token !== 'Bearer IAMADMIN') {
+	if (token !== `Bearer ${env.ADMIN_BEARER_TOKEN}`) {
 		return c.json({ code: 'UNAUTHORIZED', error: 'Unauthorized - Authentication required' }, 401);
 	}
 
