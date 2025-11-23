@@ -2,6 +2,7 @@ import { RPC_URLS, TIME_CONSTANTS } from '@filoz/synapse-sdk';
 import { env } from 'cloudflare:workers';
 import { ethers } from 'ethers';
 import { Synapse as SynapseSDK } from '@filoz/synapse-sdk';
+import { encryptImage, decryptImage } from 'workers/utils/encryption';
 
 export const Synapse = {
 	setup: async (amount: string) => {
@@ -41,15 +42,24 @@ export const Synapse = {
 	},
 
 	saveReceiptImage: async (image: Uint8Array<ArrayBufferLike>) => {
+		// Encrypt the image before uploading
+		const encryptionKey = env.SYNAPSE_ENCRYPTION_KEY;
+		const encryptedImage = await encryptImage(image, encryptionKey);
+
 		const storageContext = await Synapse.getStorageContext();
-		const { pieceCid, size, pieceId } = await storageContext.upload(image);
+		const { pieceCid, size, pieceId } = await storageContext.upload(encryptedImage);
 
 		return { pieceCid, size, pieceId };
 	},
 
 	getImage: async (pieceCid: string) => {
 		const storageContext = await Synapse.getStorageContext();
-		const image = await storageContext.download(pieceCid);
-		return image;
+		const encryptedImage = await storageContext.download(pieceCid);
+
+		// Decrypt the image after downloading
+		const encryptionKey = env.SYNAPSE_ENCRYPTION_KEY;
+		const decryptedImage = await decryptImage(encryptedImage, encryptionKey);
+
+		return decryptedImage;
 	},
 };
