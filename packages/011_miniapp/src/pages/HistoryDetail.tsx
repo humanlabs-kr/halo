@@ -254,9 +254,9 @@ function HistoryDetail() {
                 value={dayjs(receipt.issuedAt).format("MMMM D, YYYY h:mm A")}
               />
             )}
-            {receipt.paymentMethod && (
+            {/* {receipt.paymentMethod && (
               <DetailRow label="Payment Method" value={receipt.paymentMethod} />
-            )}
+            )} */}
             {receipt.countryCode && (
               <DetailRow label="Country" value={receipt.countryCode} />
             )}
@@ -264,10 +264,10 @@ function HistoryDetail() {
               label="Uploaded"
               value={dayjs(receipt.createdAt).format("MMMM D, YYYY h:mm A")}
             />
-            <DetailRow
+            {/* <DetailRow
               label="Quality Score"
               value={`${receipt.qualityRate}/100`}
-            />
+            /> */}
           </div>
         </article>
       </div>

@@ -202,40 +202,36 @@ function ReceiptCell({ item }: { item: GetListReceipts200ListItem }) {
 
   if (item.status === "pending") {
     return (
-      <Link to={`/history/${item.id}`} onClick={handleClick} className="block">
-        <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+        <div>
+          <p className="text-base font-semibold text-black">{meta.label}</p>
+          <p className="text-xs text-[#6C6C6C]">
+            {dayjs(item.createdAt).fromNow()}
+          </p>
+        </div>
+        <img
+          src="/fi_clock.svg"
+          alt="Clock"
+          className="h-6 w-6 text-[#585858]"
+        />
+      </article>
+    );
+  }
+
+  if (item.status === "rejected") {
+    return (
+      <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
+        <div className="flex items-center gap-3.5">
+          <ScoreBadge score={0} />
           <div>
             <p className="text-base font-semibold text-black">{meta.label}</p>
             <p className="text-xs text-[#6C6C6C]">
               {dayjs(item.createdAt).fromNow()}
             </p>
           </div>
-          <img
-            src="/fi_clock.svg"
-            alt="Clock"
-            className="h-6 w-6 text-[#585858]"
-          />
-        </article>
-      </Link>
-    );
-  }
-
-  if (item.status === "rejected") {
-    return (
-      <Link to={`/history/${item.id}`} onClick={handleClick} className="block">
-        <article className="pressed flex items-center justify-between rounded-[28px] bg-[#F4F4F4] px-5 py-4.5">
-          <div className="flex items-center gap-3.5">
-            <ScoreBadge score={0} />
-            <div>
-              <p className="text-base font-semibold text-black">{meta.label}</p>
-              <p className="text-xs text-[#6C6C6C]">
-                {dayjs(item.createdAt).fromNow()}
-              </p>
-            </div>
-          </div>
-          <p className="text-base font-semibold text-black">0Pt</p>
-        </article>
-      </Link>
+        </div>
+        <p className="text-base font-semibold text-black">0Pt</p>
+      </article>
     );
   }
 
