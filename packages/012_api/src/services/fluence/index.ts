@@ -15,7 +15,7 @@ export const FluenceOcr = {
 		const buffer = Buffer.from(image);
 		const base64Image = buffer.toString('base64').replace(/\s/g, '');
 
-		const response = await fetch('http://94.103.168.85:5000/ocr', {
+		const response = await fetch('https://fluence.halo.humanlabs.world/ocr', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
