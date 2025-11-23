@@ -95,11 +95,10 @@ function History() {
           onClose={() => setShowClaimModal(false)}
         />
       )}
-      {showQualityCriteriaModal && (
-        <ImageQualityCriteriaModal
-          onClose={() => setShowQualityCriteriaModal(false)}
-        />
-      )}
+      <ImageQualityCriteriaModal
+        open={showQualityCriteriaModal}
+        onClose={() => setShowQualityCriteriaModal(false)}
+      />
     </div>
   );
 }
