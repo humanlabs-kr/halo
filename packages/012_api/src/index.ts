@@ -30,6 +30,7 @@ app.use(
 	'/*',
 	cors({
 		origin: (origin, c) => {
+			console.log(origin);
 			const predefinedOrigins = compact(env.PREDEFINED_CORS_ORIGINS.split(','));
 			const originBaseDomains = compact(env.CORS_ORIGIN_BASE_DOMAINS.split(','));
 			if (predefinedOrigins.includes(origin)) {
