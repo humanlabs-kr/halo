@@ -1,0 +1,91 @@
+import { relations } from 'drizzle-orm';
+import { decimal, index, integer, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { schema } from './schema';
+import { users } from './users';
+import { receiptImages } from './receipt-images';
+import { pointLogs } from './point-logs';
+
+/**
+ * Receipt lifecycle. Mirrors `RECEIPT_STATUSES` in `@halo/contracts`.
+ *
+ * - `pending`          Queued for AI analysis the moment the receipt is scanned.
+ * - `rejected`         The analyzer scored it 30 or below, or one of the three
+ *                      required fields is missing (when / total amount / where).
+ *                      The purchase must also be no more than a week old.
+ * - `claimable`        Scored above 30 and all three required fields were found.
+ * - `claimed`          The user completed the claim (verify) by hand from the
+ *                      history screen.
+ * - `rejected-claimed` Only the participation reward was claimed, on a receipt
+ *                      that had been rejected.
+ */
+export const RECEIPT_STATUSES = [
+  'pending',
+  'rejected',
+  'claimable',
+  'claimed',
+  'rejected-claimed',
+] as const;
+
+export type ReceiptStatus = (typeof RECEIPT_STATUSES)[number];
+
+export const receipts = schema.table(
+  'receipts',
+  {
+    id: varchar('id', { length: 27 }).primaryKey(), // KSUID
+
+    userAddress: varchar('user_address', { length: 255 })
+      .references(() => users.address, { onDelete: 'restrict' })
+      .notNull(),
+
+    status: varchar('status', { length: 20 })
+      .$type<ReceiptStatus>()
+      .default('pending')
+      .notNull(),
+
+    assignedPoint: integer('assigned_point').notNull().default(0),
+
+    merchantName: text('merchant_name'),
+    issuedAt: timestamp('issued_at', { withTimezone: true }),
+    countryCode: varchar('country_code', { length: 10 }),
+    currency: varchar('currency', { length: 10 }),
+    totalAmount: decimal('total_amount', { precision: 10, scale: 2 }),
+    paymentMethod: text('payment_method'),
+    qualityRate: integer('quality_rate'),
+
+    analysisStartedAt: timestamp('analysis_started_at', { withTimezone: true }),
+    analysisCompletedAt: timestamp('analysis_completed_at', { withTimezone: true }),
+    analysisError: text('analysis_error'),
+
+    pointLogId: varchar('point_log_id', { length: 27 }).references(() => pointLogs.id, {
+      onDelete: 'restrict',
+    }),
+
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).$onUpdate(() => new Date()),
+  },
+  (table) => [
+    // Hot path: filter by user_address, then sort or range over created_at
+    // (balance sum / count over a period / history list). The primary key on id
+    // was the only index, so every one of those calls scanned the whole table.
+    // The user_address prefix also covers the status and issued_at filters.
+    index('receipts_user_address_created_at_idx').on(table.userAddress, table.createdAt.desc()),
+    // Full ordering for the admin receipt list
+    // (order by analysis_completed_at desc nulls last, id). Matching the index
+    // order to the query removes a multi-gigabyte sort spill.
+    index('receipts_analysis_completed_at_id_idx').on(
+      table.analysisCompletedAt.desc().nullsLast(),
+      table.id,
+    ),
+  ],
+);
+
+export const receiptsRelations = relations(receipts, ({ one, many }) => ({
+  user: one(users, {
+    fields: [receipts.userAddress],
+    references: [users.address],
+  }),
+  images: many(receiptImages),
+}));
+
+export type Receipt = typeof receipts.$inferSelect;
+export type NewReceipt = typeof receipts.$inferInsert;
