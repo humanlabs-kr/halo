@@ -239,8 +239,27 @@ jobs:
         if: matrix.changed == 'true'
         run: pnpm install --frozen-lockfile
 
+      # Vite inlines any `VITE_`-prefixed variable from the environment, which
+      # is how a keyed RPC endpoint reaches the browser bundle without being
+      # committed. `apps/miniapp/.env.<env>` leaves these blank on purpose: a
+      # provider URL carries its key in the path, and this repository is
+      # public.
+      #
+      # Unset is a supported state, not a misconfiguration — viem then falls
+      # back to each chain's default endpoint, which is what ships today. Set
+      # the secret only where the shared endpoint is not good enough; at the
+      # time of writing that is Worldchain, whose viem default is Alchemy's
+      # shared `/public` host.
+      #
+      # These must be separate from the API's `*_RPC_URL` secrets. Anything
+      # passed here is compiled into JavaScript every user downloads, so
+      # reusing a server-side key would publish it.
       - name: Deploy
         if: matrix.changed == 'true'
+        env:
+          VITE_CELO_RPC_URL: ${{ secrets.VITE_CELO_RPC_URL }}
+          VITE_WORLDCHAIN_RPC_URL: ${{ secrets.VITE_WORLDCHAIN_RPC_URL }}
+          VITE_KAIA_RPC_URL: ${{ secrets.VITE_KAIA_RPC_URL }}
         run: pnpm --filter @halo/${{ matrix.app }} deploy:${{ env.DEPLOY_ENV }}
 
   create-release:
