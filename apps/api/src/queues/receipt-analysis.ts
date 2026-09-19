@@ -24,6 +24,20 @@ const MIN_QUALITY_RATE = 30;
 /** Older than this and the receipt is not a current purchase. */
 const MAX_RECEIPT_AGE_DAYS = 7;
 
+/**
+ * Widest value `receipts.total_amount` holds — numeric(15, 2).
+ *
+ * Writing past it raises `numeric field overflow`, and because that happens in
+ * the final transaction — after the model has already read the receipt — the
+ * write fails, the message retries, and the retries buy nothing because the
+ * amount is the same every time. Before receipts were settled on the last
+ * attempt this left the row `pending` forever; a production receipt from
+ * 2026-09-13 was stuck exactly that way.
+ *
+ * So the bound is enforced here rather than discovered by the database.
+ */
+const MAX_TOTAL_AMOUNT = 9_999_999_999_999.99;
+
 const RETRY_DELAY_SECONDS = 10;
 
 /**
@@ -227,7 +241,7 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
         issuedAt: receiptData.issuedAt,
         countryCode: receiptData.countryCode,
         currency: receiptData.currency,
-        totalAmount: receiptData.totalAmount?.toFixed(2) ?? null,
+        totalAmount: storableAmount(receiptData.totalAmount),
         paymentMethod: receiptData.paymentMethod,
         qualityRate: Math.max(0, Math.min(100, Math.floor(receiptData.qualityRate))),
         status: pointIneligible ? 'claimed' : status,
@@ -237,6 +251,23 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
       })
       .where(and(eq(receipts.id, params.receiptId), eq(receipts.status, 'pending')));
   });
+}
+
+/**
+ * Renders an amount for `receipts.total_amount`, or null if it cannot be stored.
+ *
+ * NaN, infinities and anything wider than the column are all "no amount" rather
+ * than an error. The alternative is an exception three seconds into a paid
+ * model call, on data that will not change when the message is redelivered.
+ *
+ * Exported for the test that pins the boundary.
+ */
+export function storableAmount(amount: number | null): string | null {
+  if (amount === null || !Number.isFinite(amount) || Math.abs(amount) > MAX_TOTAL_AMOUNT) {
+    return null;
+  }
+
+  return amount.toFixed(2);
 }
 
 /**
@@ -260,7 +291,10 @@ async function gradeReceipt(
     return 'rejected';
   }
 
-  if (receiptData.totalAmount === null || Number.isNaN(receiptData.totalAmount)) {
+  // Same test as the write path: a receipt whose total cannot be stored has no
+  // total as far as the rest of the system is concerned, and a receipt with no
+  // total is not claimable.
+  if (storableAmount(receiptData.totalAmount) === null) {
     return 'rejected';
   }
 

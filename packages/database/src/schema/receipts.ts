@@ -49,7 +49,23 @@ export const receipts = schema.table(
     issuedAt: timestamp('issued_at', { withTimezone: true }),
     countryCode: varchar('country_code', { length: 10 }),
     currency: varchar('currency', { length: 10 }),
-    totalAmount: decimal('total_amount', { precision: 10, scale: 2 }),
+    /**
+     * numeric(15, 2) — up to 9,999,999,999,999.99.
+     *
+     * Was numeric(10, 2), which caps at 99,999,999.99, and receipts in
+     * high-denomination currencies sat right under that ceiling: TZS reached
+     * 89M and IDR 83M, at 89% and 83% of the old limit. Anything past it threw
+     * `numeric field overflow` *after* the vision model had already read the
+     * receipt, so the write failed and the receipt was never settled.
+     *
+     * 15 rather than something larger because the value is a JS `number` at
+     * both ends of this pipeline — the model returns one and the mini app
+     * formats one — and `Number.MAX_SAFE_INTEGER` is ~9.007e15. A column wider
+     * than that would accept values the rest of the system cannot represent
+     * exactly. This leaves roughly 100,000x headroom over the largest amount
+     * ever recorded.
+     */
+    totalAmount: decimal('total_amount', { precision: 15, scale: 2 }),
     paymentMethod: text('payment_method'),
     qualityRate: integer('quality_rate'),
 
