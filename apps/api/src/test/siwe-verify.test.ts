@@ -17,15 +17,9 @@ import { startRpcStub, type RpcStub } from './rpc-stub';
 /**
  * The authentication suite.
  *
- * This file exists because the login path has been broken twice, both times
- * silently, and both times in a way that typecheck and build were happy with:
- *
- *  1. World verification was once rewritten onto the `siwe` package. The strict
- *     ABNF parser rejected MiniKit's message outright, and the replacement
- *     trusted `payload.address` without binding it to the signature — anybody
- *     could have opened a session as anybody.
- *  2. `POST /auth/session/celo-miniapp/connect` shipped to production issuing a
- *     session for any address with no signature at all.
+ * The login path has broken twice in ways typecheck and build were happy with:
+ * a signature verified but never bound to the claimed address, and a session
+ * issued with no signature at all.
  *
  * So the assertions here are deliberately about *security properties*, not
  * about implementation details. Every signature is a real EIP-191 signature

@@ -14,15 +14,8 @@ declare global {
 /**
  * MiniPay (Celo).
  *
- * This adapter used to hand the API a bare address and no signature, on the
- * premise that MiniPay cannot sign. That premise was wrong: MiniPay's injected
- * provider implements `personal_sign`, and our own humantap has been taking
- * SIWE signatures from it in production. The cost of believing it was an
- * endpoint that issued a session for any address anyone cared to name.
- *
- * MiniPay signs with an EOA — the wallet offers seed-phrase export, which only
- * a key-backed account can do — so the server verifies by recovering the
- * signer.
+ * Signs SIWE with the injected EIP-1193 provider's `personal_sign`. The account
+ * is an EOA, so the server verifies by recovering the signer.
  */
 export const celoAdapter: AuthAdapter = {
   platform: 'celo',

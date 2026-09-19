@@ -123,14 +123,8 @@ describe('GET /auth/session/miniapp/nonce', () => {
   });
 });
 
-/**
- * Regression #2, pinned.
- *
- * The endpoint used to be documented as "Connect celo miniapp (MiniPay) — no
- * signature required", on the premise that MiniPay cannot `personal_sign`. That
- * premise was wrong, and the endpoint was a session for any address anyone
- * cared to type.
- */
+/** A session is only ever issued against a signature. Pinned, because this
+ *  endpoint once issued one for any address that was merely named. */
 describe('POST /auth/session/celo-miniapp/connect — no session without a signature', () => {
   it('refuses a body with no signature field at all (the old shape)', async () => {
     const { app } = makeApp();

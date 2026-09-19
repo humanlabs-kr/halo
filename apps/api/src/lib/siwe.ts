@@ -24,29 +24,16 @@ import { parseSiweMessage, validateSiweMessage } from 'viem/siwe';
 /**
  * One SIWE verifier for all three chains.
  *
- * Halo used to verify each platform in its own way, and each way was missing a
- * different check — World never looked at the domain or the statement, Kaia
- * signed a constant string with no nonce in it, and MiniPay was handed a
- * session with no signature at all. Since all three write to the same `users`
- * row and mint the same JWT `sub`, the weakest of the three was the real
- * security of all three. Everything now goes through `verifySiwe`, which runs
- * the *same* field checks for every platform and only then branches on how that
- * platform's wallet proves a signature.
+ * All three platforms write the same `users` row and mint the same JWT `sub`,
+ * so the weakest check is the real security of all of them. Everything goes
+ * through `verifySiwe`, which runs the *same* field checks for every platform
+ * and only then branches on how that wallet proves a signature:
  *
- * ── Two premises the old code got wrong ─────────────────────────────────────
- *
- *  1. "MiniPay cannot sign." It can. MiniPay injects an EIP-1193 provider that
- *     implements `personal_sign`, and our own team's humantap has been taking
- *     SIWE signatures from MiniPay in production. The unsigned `connect`
- *     endpoint that premise justified was a full account-takeover hole: nonce
- *     and HMAC come from a public endpoint, so anybody could name any address.
- *
- *  2. "A signature can be checked by recovering the signer." Only for an EOA.
- *     World App wallets are Safe smart contracts — there is no key to recover
- *     from, and ownership is proved by asking the wallet contract itself
- *     (EIP-1271 `isValidSignature`, or `isOwner` for the older payload shape).
- *     Kaia's DappPortal wallet may or may not be a contract, so it goes through
- *     viem's `verifyMessage`, which handles both.
+ *  - MiniPay signs with an EOA — recover the signer.
+ *  - World App wallets are Safe contracts, so there is no key to recover from;
+ *    ownership is proved by asking the wallet (EIP-1271 `isValidSignature`).
+ *  - Kaia's DappPortal wallet may be either, so it goes through viem's
+ *    `verifyMessage`, which handles both.
  */
 
 /**
