@@ -65,7 +65,8 @@
         "max_batch_size": 1,
         "max_batch_timeout": 0,
         "max_concurrency": 30,
-        "retry_delay": 10000
+        "retry_delay": 10000,
+        "max_retries": 3
       }
     ]
   },
@@ -74,7 +75,7 @@
     // Must match the keys in `src/scheduled/index.ts` character for character —
     // Cloudflare passes the expression through verbatim and an expression with
     // no matching key registers nothing.
-    "crons": ["0 0 * * *"]
+    "crons": ["0 0 * * *", "*/15 * * * *"]
   },
 
   "env": {
@@ -125,12 +126,13 @@
             "max_batch_size": 1,
             "max_batch_timeout": 0,
             "max_concurrency": 30,
-            "retry_delay": 10000
+            "retry_delay": 10000,
+            "max_retries": 3
           }
         ]
       },
       "triggers": {
-        "crons": ["0 0 * * *"]
+        "crons": ["0 0 * * *", "*/15 * * * *"]
       }
     },
 
@@ -179,12 +181,13 @@
             "max_batch_size": 1,
             "max_batch_timeout": 0,
             "max_concurrency": 30,
-            "retry_delay": 10000
+            "retry_delay": 10000,
+            "max_retries": 3
           }
         ]
       },
       "triggers": {
-        "crons": ["0 0 * * *"]
+        "crons": ["0 0 * * *", "*/15 * * * *"]
       }
     }
   }

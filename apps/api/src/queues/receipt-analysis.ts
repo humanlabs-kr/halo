@@ -27,6 +27,25 @@ const MAX_RECEIPT_AGE_DAYS = 7;
 const RETRY_DELAY_SECONDS = 10;
 
 /**
+ * Total deliveries a message gets: `max_retries` in `wrangler.jsonc` **plus the
+ * first delivery**.
+ *
+ * `message.attempts` is 1-based — the queue computes it as `failedAttempts + 1`
+ * and keeps redelivering while `failedAttempts < maxRetries + 1`. So
+ * `max_retries: 3` yields attempts 1, 2, 3 and 4. Treating 3 as the last one
+ * would throw away a delivery that is still coming: a receipt caught in a
+ * 40-second provider outage would be rejected at t=20s while the attempt that
+ * would have succeeded, at t=30s, never runs.
+ *
+ * Cloudflare drops a message once its retries are spent, and nothing else
+ * notices: the row keeps `status = 'pending'`, no error is written, and the
+ * receipt sits in the user's history saying "analysing" until someone runs a
+ * query. That is how 174k rows accumulated, so the final attempt settles the
+ * receipt rather than letting the queue swallow it.
+ */
+const MAX_DELIVERY_ATTEMPTS = 4;
+
+/**
  * Marks a receipt that was uploaded past the weekly point-earning limit. It is
  * still analysed and shown, it just cannot be claimed.
  */
@@ -50,18 +69,70 @@ export const ReceiptAnalysisQueue = {
   async run(batch: MessageBatch, env: Env): Promise<void> {
     const db = createDb(env.HYPERDRIVE.connectionString);
 
+    // `parse` is inside the async callback on purpose. Called in a plain
+    // callback it throws synchronously, which makes `.map()` itself throw
+    // before `allSettled` ever sees it — the handler rejects, the whole batch
+    // is redelivered, and the per-message settling below never runs. An
+    // unparseable message has to become a rejected promise like any other
+    // failure.
     const results = await Promise.allSettled(
-      batch.messages.map((message) => analyseReceipt(db, env, paramsSchema.parse(message.body))),
+      batch.messages.map(async (message) => analyseReceipt(db, env, paramsSchema.parse(message.body))),
     );
 
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
+    await Promise.all(
+      results.map(async (result, index) => {
+        const message = batch.messages[index];
+
+        if (result.status !== 'rejected' || !message) {
+          return;
+        }
+
         console.error('Receipt analysis message failed:', result.reason);
-        batch.messages[index]?.retry({ delaySeconds: RETRY_DELAY_SECONDS });
-      }
-    });
+
+        if (message.attempts < MAX_DELIVERY_ATTEMPTS) {
+          message.retry({ delaySeconds: RETRY_DELAY_SECONDS });
+          return;
+        }
+
+        await settleUnanalysable(db, message.body, result.reason);
+      }),
+    );
   },
 };
+
+/**
+ * Closes out a receipt whose analysis will not be attempted again.
+ *
+ * Deliberately scoped to rows still in `pending`: a receipt the user has since
+ * claimed, or one a later delivery already settled, must not be rewritten by a
+ * message that is only now giving up.
+ */
+async function settleUnanalysable(db: Database, body: unknown, reason: unknown): Promise<void> {
+  const params = paramsSchema.safeParse(body);
+
+  if (!params.success) {
+    console.error('Cannot settle an analysis message that does not parse:', body);
+    return;
+  }
+
+  const message = reason instanceof Error ? reason.message : String(reason);
+
+  const settled = await tryCatch(
+    db
+      .update(receipts)
+      .set({
+        status: 'rejected',
+        assignedPoint: 0,
+        analysisCompletedAt: new Date(),
+        analysisError: `Abandoned after ${MAX_DELIVERY_ATTEMPTS} delivery attempts: ${message}`,
+      })
+      .where(and(eq(receipts.id, params.data.receiptId), eq(receipts.status, 'pending'))),
+  );
+
+  if (settled.error) {
+    console.error(`Failed to settle abandoned receipt ${params.data.receiptId}:`, settled.error);
+  }
+}
 
 async function analyseReceipt(db: Database, env: Env, params: Params): Promise<void> {
   const receipt = await db.query.receipts.findFirst({
@@ -70,6 +141,16 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
 
   if (!receipt) {
     throw new Error(`Receipt not found: ${params.receiptId}`);
+  }
+
+  // A receipt can be delivered twice — the sweeper re-queues anything still
+  // pending, and a message it was not aware of may arrive later. Analysing an
+  // already-settled receipt is not a harmless repeat: it re-runs the model and
+  // overwrites the verdict, which can knock a `claimable` receipt down to
+  // `rejected` (the duplicate check below would match the row's own earlier
+  // result) or reopen one the user has already claimed.
+  if (receipt.status !== 'pending') {
+    return;
   }
 
   const receiptImageRecords = await db.query.receiptImages.findMany({
@@ -112,7 +193,7 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
   }
 
   const receiptData = analysis.data;
-  const status = await gradeReceipt(db, receipt.userAddress, receiptData);
+  const status = await gradeReceipt(db, params.receiptId, receipt.userAddress, receiptData);
 
   const assignedPoint =
     status === 'claimable'
@@ -130,6 +211,13 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
 
     // Uploaded past the weekly limit: record the analysis, but settle it
     // immediately at zero rather than offering points that cannot be claimed.
+    // Re-checked inside the transaction: the guard at the top of this function
+    // ran before a model call that takes seconds, which is more than enough
+    // time for a claim to land.
+    if (current.status !== 'pending') {
+      return;
+    }
+
     const pointIneligible = current.assignedPoint === POINT_INELIGIBLE;
 
     await tx
@@ -147,7 +235,7 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
         analysisCompletedAt: new Date(),
         analysisError: null,
       })
-      .where(eq(receipts.id, params.receiptId));
+      .where(and(eq(receipts.id, params.receiptId), eq(receipts.status, 'pending')));
   });
 }
 
@@ -160,6 +248,7 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
  */
 async function gradeReceipt(
   db: Database,
+  receiptId: string,
   userAddress: string,
   receiptData: Receipt,
 ): Promise<'claimable' | 'rejected'> {
@@ -184,8 +273,13 @@ async function gradeReceipt(
   // Same wallet, same purchase timestamp: the same receipt photographed twice.
   // Already-claimed rows are excluded so a legitimate re-scan of a settled
   // receipt does not block a genuinely new one.
+  //
+  // The row being graded is excluded as well. Without that, a second delivery
+  // of the same message finds the verdict its own first delivery wrote and
+  // calls the receipt a duplicate of itself.
   const duplicate = await db.query.receipts.findFirst({
     where: and(
+      ne(receipts.id, receiptId),
       eq(receipts.userAddress, userAddress),
       eq(receipts.issuedAt, receiptData.issuedAt),
       ne(receipts.status, 'claimed'),
