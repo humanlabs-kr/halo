@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import { useFormatters } from '@/lib/format';
 import utc from 'dayjs/plugin/utc';
 import PageHeader from '@/components/PageHeader';
 import RaffleCountdownCard from '@/components/RaffleCountdownCard';
@@ -10,19 +11,23 @@ import RaffleEntrySheet from '@/components/RaffleEntrySheet';
 import SectionHeading from '@/components/SectionHeading';
 import { useRafflePools, useRaffleStats } from '@/lib/api/queries';
 import { type RafflePool } from '@/lib/api/raffle';
-import { REWARD_CURRENCY } from '@/lib/constants';
+import { platformFeatures, REWARD_CURRENCY } from '@/lib/constants';
 import { sendLightImpactHaptic } from '@/lib/haptic';
 import { useAuthStore } from '@/stores/auth';
 import { useEmailVerificationStore } from '@/stores/emailVerification';
 
+// Retained for UTC arithmetic only — the round closes at UTC midnight and the
+// countdown below is a difference, not a formatted date.
 dayjs.extend(utc);
 
 function Rewards() {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const platform = useAuthStore((s) => s.platform);
   const { isVerified, checkStatus } = useEmailVerificationStore();
+  const needsVerifiedEmail = platformFeatures(platform).raffleNeedsVerifiedEmail;
 
   const [remainingMs, setRemainingMs] = useState(0);
   const [selectedPool, setSelectedPool] = useState<RafflePool | null>(null);
@@ -38,8 +43,8 @@ function Rewards() {
   const { data: stats } = useRaffleStats();
 
   useEffect(() => {
-    if (platform) void checkStatus(platform);
-  }, [checkStatus, platform]);
+    if (platform && needsVerifiedEmail) void checkStatus(platform);
+  }, [checkStatus, needsVerifiedEmail, platform]);
 
   // Rounds close at UTC midnight.
   useEffect(() => {
@@ -65,8 +70,11 @@ function Rewards() {
     if (pool.isClosed) return;
     sendLightImpactHaptic();
 
-    // Prizes are paid out by email, so the address has to be reachable first.
-    if (!isVerified) {
+    // Chains we pay out ourselves need a reachable address, and their entry
+    // endpoint rejects an unverified one with EMAIL_NOT_VERIFIED. World's does
+    // not — winners there claim through a Drop link — so asking for an email
+    // first would block an entry the server would have accepted.
+    if (needsVerifiedEmail && !isVerified) {
       navigate('/verify-email?returnTo=/rewards');
       return;
     }
@@ -98,20 +106,20 @@ function Rewards() {
           >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-emerald-700/70">Total prizes awarded</p>
+                <p className="text-xs text-emerald-700/70">{t('Total prizes awarded')}</p>
                 <p className="text-lg font-bold text-emerald-700">
-                  ${stats.totalPrizesAwarded.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                  ${fmt.number(stats.totalPrizesAwarded, { maximumFractionDigits: 0 })}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-emerald-700/70">Winners</p>
+                <p className="text-xs text-emerald-700/70">{t('Winners')}</p>
                 <p className="text-lg font-bold text-emerald-700">
-                  {stats.totalPrizesAwardedCount.toLocaleString()}
+                  {fmt.number(stats.totalPrizesAwardedCount)}
                 </p>
               </div>
             </div>
             <div className="mt-2 flex items-center justify-center gap-1 text-xs text-emerald-600/70">
-              <span>View all payouts</span>
+              <span>{t('View all payouts')}</span>
               <svg
                 viewBox="0 0 20 20"
                 fill="none"
@@ -148,7 +156,7 @@ function Rewards() {
             className={`flex h-8 w-8 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5] ${
               isPoolsFetching ? 'animate-spin' : ''
             }`}
-            aria-label="Refresh raffles"
+            aria-label={t('Refresh raffles')}
           >
             <svg
               className="h-4 w-4 text-[#666]"
@@ -182,7 +190,7 @@ function Rewards() {
             ))
           ) : (
             <div className="py-8 text-center text-sm text-[#8D8D8D]">
-              No raffle pools available today
+              {t('No raffle pools available today')}
             </div>
           )}
         </div>
@@ -205,6 +213,7 @@ function RafflePoolCard({
   onEnter: () => void;
 }) {
   const { t } = useTranslation();
+  const fmt = useFormatters();
 
   return (
     <article
@@ -215,22 +224,23 @@ function RafflePoolCard({
     >
       <div className="flex-1">
         <p className="mb-1 text-base font-semibold text-black">
-          {pool.amount} {currency}
+          {fmt.amount(pool.amount)} {currency}
         </p>
         <p className="mb-1 text-xs text-[#8D8D8D]">
-          Use {pool.pointPerEntry} pts
+          {t('Use {{count}} pts', { count: pool.pointPerEntry })}
+          {' / '}
           {pool.maxEntriesPerUser === -1
-            ? ' / Unlimited entries'
-            : ` / Max ${pool.maxEntriesPerUser} entries per day`}
+            ? t('Unlimited entries')
+            : t('Max {{count}} entries per day', { count: pool.maxEntriesPerUser })}
         </p>
         <p className="text-xs text-[#8D8D8D]">
-          Mine:{' '}
+          {t('Mine:')}{' '}
           <span className="font-semibold text-black">
-            {pool.userEntryCount.toLocaleString()}
+            {fmt.number(pool.userEntryCount)}
           </span>{' '}
-          · Total:{' '}
+          · {t('Total:')}{' '}
           <span className="font-semibold text-black">
-            {pool.totalEntryCount.toLocaleString()}
+            {fmt.number(pool.totalEntryCount)}
           </span>
         </p>
       </div>

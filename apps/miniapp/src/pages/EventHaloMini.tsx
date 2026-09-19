@@ -128,7 +128,7 @@ function EventHaloMini() {
       <button
         onClick={() => navigate(-1)}
         className="fixed top-4 left-4 z-50 p-2.5 bg-black/60 backdrop-blur-md rounded-full border border-white/10"
-        aria-label="Back"
+        aria-label={t("Back")}
       >
         <ChevronLeft className="w-5 h-5 text-white" />
       </button>
@@ -173,7 +173,7 @@ function EventHaloMini() {
               {campaign.flag}
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 bg-emerald-500 rounded-full text-xs font-bold text-white">
-              FREE
+              {t("FREE")}
             </div>
           </div>
         </div>
@@ -415,7 +415,7 @@ function NotAvailableGate() {
       <button
         onClick={() => navigate(-1)}
         className="fixed top-4 left-4 z-50 p-2.5 bg-black/60 backdrop-blur-md rounded-full border border-white/10"
-        aria-label="Back"
+        aria-label={t("Back")}
       >
         <ChevronLeft className="w-5 h-5 text-white" />
       </button>

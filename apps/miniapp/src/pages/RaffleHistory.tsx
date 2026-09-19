@@ -1,21 +1,33 @@
 import type { Platform } from "@halo/contracts";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
+import { useFormatters } from "@/lib/format";
 import { useRaffleHistory } from "@/lib/api/queries";
 import { type RaffleHistoryView } from "@/lib/api/raffle";
 import { EXPLORER_TX_URL, REWARD_CURRENCY } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 
-dayjs.extend(relativeTime);
+// Retained for UTC date arithmetic only — the round key below is a machine
+// string and must stay "YYYY-MM-DD" in every language. Everything the user
+// reads goes through `useFormatters`.
 dayjs.extend(utc);
-dayjs.locale("en");
+
+/**
+ * How often to re-read the round while a claim is in flight.
+ *
+ * A World prize is claimed on Drop Protocol's own page, outside this app, so
+ * nothing tells us when it lands — the server is simply asked again until the
+ * reward comes back settled. Without this the user returns to an unchanged
+ * "Claim" button and taps it a second time.
+ */
+const CLAIM_POLL_INTERVAL_MS = 2_000;
 
 function RaffleHistory() {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const navigate = useNavigate();
   const platform = useAuthStore((s) => s.platform);
   // Start with yesterday's date in YYYY-MM-DD format (UTC)
@@ -23,7 +35,49 @@ function RaffleHistory() {
     dayjs().utc().subtract(1, "day").format("YYYY-MM-DD")
   );
 
-  const { data: apiData, isLoading, error } = useRaffleHistory(platform, selectedDate);
+  // Claim links the user has opened but that have not settled yet, keyed by
+  // the link itself — one reward, one link.
+  const [claimingUrls, setClaimingUrls] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
+
+  const {
+    data: apiData,
+    isLoading,
+    error,
+  } = useRaffleHistory(platform, selectedDate, {
+    refetchInterval: claimingUrls.size > 0 ? CLAIM_POLL_INTERVAL_MS : undefined,
+  });
+
+  const startClaim = useCallback((claimUrl: string) => {
+    setClaimingUrls((previous) => new Set(previous).add(claimUrl));
+    // The claim page belongs to Drop Protocol, not to us; opening it in a new
+    // context keeps the app mounted so the poll above can see it complete.
+    window.open(claimUrl, "_blank", "noopener,noreferrer");
+  }, []);
+
+  // Stop polling for a reward once the server reports it settled.
+  useEffect(() => {
+    if (claimingUrls.size === 0) return;
+
+    const settled = (apiData?.myRewards ?? [])
+      .filter((reward) => reward.settledAt !== null)
+      .map((reward) => reward.claimUrl)
+      .filter((url): url is string => url !== undefined && claimingUrls.has(url));
+
+    if (settled.length === 0) return;
+    setClaimingUrls((previous) => {
+      const next = new Set(previous);
+      for (const url of settled) next.delete(url);
+      return next;
+    });
+  }, [apiData, claimingUrls]);
+
+  // A date change reopens a different round; anything in flight belongs to the
+  // one being left behind, and keeping it would poll the wrong query forever.
+  useEffect(() => {
+    setClaimingUrls(new Set());
+  }, [selectedDate]);
 
   const handlePrevious = () => {
     const previousDate = dayjs(selectedDate)
@@ -61,7 +115,7 @@ function RaffleHistory() {
               navigate(-1);
             }}
             className="flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5]"
-            aria-label="Go back"
+            aria-label={t("Go back")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -86,7 +140,7 @@ function RaffleHistory() {
             type="button"
             onClick={handlePrevious}
             className="flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5]"
-            aria-label="Previous date"
+            aria-label={t("Previous date")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -101,7 +155,7 @@ function RaffleHistory() {
             </svg>
           </button>
           <span className="min-w-[140px] text-center text-lg font-semibold text-black">
-            {dayjs(selectedDate).format("MMM D, YYYY")}
+            {fmt.date(selectedDate)}
           </span>
           <button
             type="button"
@@ -110,7 +164,7 @@ function RaffleHistory() {
             className={`flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5] ${
               !canGoNext ? "cursor-not-allowed opacity-40" : ""
             }`}
-            aria-label="Next date"
+            aria-label={t("Next date")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -131,15 +185,15 @@ function RaffleHistory() {
         {isLoading ? (
           <div className="mt-8 flex flex-col items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#F4F4F4] border-t-black" />
-            <p className="mt-4 text-sm text-[#8D8D8D]">Loading...</p>
+            <p className="mt-4 text-sm text-[#8D8D8D]">{t("L-W9Q0CklX")}</p>
           </div>
         ) : error ? (
           <div className="mt-8 flex flex-col items-center justify-center py-12">
             <p className="mb-1.5 text-base font-semibold text-black">
-              Error loading raffle history
+              {t("Error loading raffle history")}
             </p>
             <p className="mb-6 text-center text-sm text-[#8D8D8D]">
-              Please try again later
+              {t("Please try again later")}
             </p>
           </div>
         ) : !apiData || apiData.pools.length === 0 ? (
@@ -151,6 +205,8 @@ function RaffleHistory() {
               date={selectedDate}
               data={apiData}
               platform={platform}
+              claimingUrls={claimingUrls}
+              onClaim={startClaim}
             />
           </div>
         )}
@@ -163,11 +219,17 @@ function RaffleRoundCard({
   date,
   data,
   platform,
+  claimingUrls,
+  onClaim,
 }: {
   date: string;
   data: RaffleHistoryView;
   platform: Platform | null;
+  claimingUrls: ReadonlySet<string>;
+  onClaim: (claimUrl: string) => void;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
   const currency = platform ? REWARD_CURRENCY[platform] : "";
   const isWon = data.myRewards.length > 0;
   const isLost = !isWon && data.totalEntryCount > 0;
@@ -182,12 +244,12 @@ function RaffleRoundCard({
       {/* Round Header */}
       <div className="mb-4 flex items-start justify-between">
         <div className="flex-1">
-          <p className="mb-0.5 text-lg font-bold text-black">
-            {dayjs(date).format("MMM D, YYYY")}
-          </p>
+          <p className="mb-0.5 text-lg font-bold text-black">{fmt.date(date)}</p>
           <p className="text-xs text-[#8D8D8D]">
-            Drawn {dayjs(drawDate).fromNow()} ·{" "}
-            {data.totalEntryCount.toLocaleString()} entries
+            {t("Drawn {{when}} · {{entries}} entries", {
+              when: fmt.relative(drawDate),
+              entries: fmt.number(data.totalEntryCount),
+            })}
           </p>
         </div>
         {isWon && (
@@ -198,12 +260,12 @@ function RaffleRoundCard({
                 : "bg-amber-100 text-amber-700"
             }`}
           >
-            {allSettled ? "Paid" : "Won - pending payout"}
+            {allSettled ? t("Paid") : t("Won - pending payout")}
           </span>
         )}
         {isLost && (
           <span className="ml-3 inline-flex shrink-0 items-center rounded-full bg-rose-100/80 px-3 py-1 text-xs font-semibold text-rose-500/80">
-            Lost
+            {t("Lost")}
           </span>
         )}
       </div>
@@ -217,14 +279,14 @@ function RaffleRoundCard({
           >
             <div className="flex items-center justify-between gap-3">
               <span className="shrink-0 text-sm font-semibold text-black">
-                {pool.amount} {currency}
+                {fmt.amount(pool.amount)} {currency}
               </span>
               {pool.winner ? (
                 <span className="truncate text-right text-xs text-[#666666]">
                   @{pool.winner.username || pool.winner.address.slice(0, 10) + "..."}
                 </span>
               ) : (
-                <span className="text-xs text-[#8D8D8D]">No entries</span>
+                <span className="text-xs text-[#8D8D8D]">{t("No entries")}</span>
               )}
             </div>
           </div>
@@ -235,29 +297,44 @@ function RaffleRoundCard({
       {isWon && data.myRewards.length > 0 && (
         <div className="border-t border-[#E5E5E5] pt-4">
           <p className="mb-3 text-xs text-[#8D8D8D]">
-            Your Reward{data.myRewards.length > 1 ? "s" : ""} (
-            {totalRewardAmount.toLocaleString(undefined, {
-              maximumFractionDigits: 2,
-            })}{" "}
-            {currency})
+            {t(
+              data.myRewards.length > 1
+                ? "Your Rewards ({{amount}} {{currency}})"
+                : "Your Reward ({{amount}} {{currency}})",
+              {
+                amount: fmt.amount(totalRewardAmount),
+                currency,
+              },
+            )}
           </p>
           <div className="space-y-2.5">
             {data.myRewards.map((reward, index) => (
               <div key={index} className="flex items-center justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <p className="text-base font-bold text-black">
-                    {reward.amount} {currency}
+                    {fmt.amount(reward.amount)} {currency}
                   </p>
                 </div>
-                <RewardSettlement reward={reward} platform={platform} />
+                <RewardSettlement
+                  reward={reward}
+                  platform={platform}
+                  isClaiming={
+                    reward.claimUrl !== undefined &&
+                    claimingUrls.has(reward.claimUrl)
+                  }
+                  onClaim={onClaim}
+                />
               </div>
             ))}
           </div>
           {!allSettled && (
             <p className="mt-3 text-xs text-[#8D8D8D]">
               {data.myRewards.some((reward) => reward.claimUrl)
-                ? "Tap Claim to collect your prize."
-                : `Payouts are processed at the end of each month. You will receive ${currency} in your wallet.`}
+                ? t("Tap Claim to collect your prize.")
+                : t(
+                    "Payouts are processed at the end of each month. You will receive {{currency}} in your wallet.",
+                    { currency },
+                  )}
             </p>
           )}
         </div>
@@ -274,29 +351,44 @@ function RaffleRoundCard({
 function RewardSettlement({
   reward,
   platform,
+  isClaiming,
+  onClaim,
 }: {
   reward: RaffleHistoryView["myRewards"][number];
   platform: Platform | null;
+  isClaiming: boolean;
+  onClaim: (claimUrl: string) => void;
 }) {
+  const { t } = useTranslation();
   const settled = reward.settledAt !== null;
+  const claimUrl = reward.claimUrl;
 
-  if (!settled && reward.claimUrl) {
+  if (!settled && claimUrl) {
     return (
-      <a
-        href={reward.claimUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="shrink-0 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
+      <button
+        type="button"
+        onClick={() => onClaim(claimUrl)}
+        disabled={isClaiming}
+        className={`flex shrink-0 items-center gap-2 rounded-full bg-black px-5 py-2.5 text-sm font-semibold text-white shadow-sm ${
+          isClaiming ? "cursor-not-allowed opacity-50" : ""
+        }`}
       >
-        Claim
-      </a>
+        {isClaiming ? (
+          <>
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            <span>{t("L-qHrxRpu3")}</span>
+          </>
+        ) : (
+          t("L-HZTnPZQA")
+        )}
+      </button>
     );
   }
 
   if (!settled) {
     return (
       <div className="shrink-0 rounded-full bg-amber-100 px-5 py-2.5 text-sm font-semibold text-amber-700">
-        Pending
+        {t("Pending")}
       </div>
     );
   }
@@ -309,29 +401,31 @@ function RewardSettlement({
         rel="noopener noreferrer"
         className="shrink-0 rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm ring-2 ring-emerald-400/50"
       >
-        View TX
+        {t("View TX")}
       </a>
     );
   }
 
   return (
     <div className="shrink-0 rounded-full bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm ring-2 ring-emerald-400/50">
-      Paid
+      {t("Paid")}
     </div>
   );
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-8 flex flex-col items-center justify-center py-12">
       <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-[#F4F4F4]">
-        <img src="/u_gift.svg" alt="Raffle" className="h-8 w-8 opacity-40" />
+        <img src="/u_gift.svg" alt={t("L-EbJnZmoR")} className="h-8 w-8 opacity-40" />
       </div>
       <p className="mb-1.5 text-base font-semibold text-black">
-        No raffle entries
+        {t("No raffle entries")}
       </p>
       <p className="mb-6 text-center text-sm text-[#8D8D8D]">
-        Join raffle pools to see results here
+        {t("Join raffle pools to see results here")}
       </p>
     </div>
   );

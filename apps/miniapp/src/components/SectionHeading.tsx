@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 type SectionHeadingProps = {
   title: string;
   subtitle: string;
@@ -13,6 +15,8 @@ export default function SectionHeading({
   actionIcon = false,
   onClick,
 }: SectionHeadingProps) {
+  const { t } = useTranslation();
+
   const content = (
     <>
       <div>
@@ -22,7 +26,7 @@ export default function SectionHeading({
       {actionIcon && (
         <img
           src="/u_arrow-right.svg"
-          alt="More"
+          alt={t("More")}
           className="h-5 w-5 text-black"
         />
       )}

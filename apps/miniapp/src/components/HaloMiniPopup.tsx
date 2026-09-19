@@ -5,6 +5,13 @@ import { buildInternalHaloMiniLink } from "@/lib/halo-mini-campaigns";
 import { useHaloMiniCampaign } from "@/hooks/useHaloMiniCampaign";
 
 const POPUP_STORAGE_KEY = "halo.crossPromo.lastShown";
+/**
+ * Key the pre-merge builds wrote. The rename kept the same origin, so every
+ * user who had already dismissed the popup still has the old timestamp and
+ * none has the new one — without this read they would all be shown it again
+ * on the first load after release.
+ */
+const LEGACY_POPUP_STORAGE_KEY = "halo_mini_popup_last_shown";
 const POPUP_COOLDOWN_HOURS = 24;
 const FIRST_VISIT_DELAY_MS = 10_000;
 const RETURNING_VISIT_DELAY_MS = 15_000;
@@ -19,7 +26,9 @@ export function HaloMiniPopup() {
   useEffect(() => {
     if (!campaign) return;
 
-    const lastShown = localStorage.getItem(POPUP_STORAGE_KEY);
+    const lastShown =
+      localStorage.getItem(POPUP_STORAGE_KEY) ??
+      localStorage.getItem(LEGACY_POPUP_STORAGE_KEY);
     const lastShownTime = lastShown ? Number.parseInt(lastShown, 10) : Number.NaN;
     const isFirstVisit = Number.isNaN(lastShownTime);
 
@@ -35,14 +44,21 @@ export function HaloMiniPopup() {
     return () => clearTimeout(timeoutId);
   }, [campaign]);
 
+  // Every write goes through here so the legacy entry is cleared exactly where
+  // the current one is written — the migration then needs no separate pass.
+  const markShown = () => {
+    localStorage.setItem(POPUP_STORAGE_KEY, Date.now().toString());
+    localStorage.removeItem(LEGACY_POPUP_STORAGE_KEY);
+  };
+
   const handleClose = () => {
     setIsVisible(false);
-    localStorage.setItem(POPUP_STORAGE_KEY, Date.now().toString());
+    markShown();
   };
 
   const handleCTA = () => {
     if (!campaign) return;
-    localStorage.setItem(POPUP_STORAGE_KEY, Date.now().toString());
+    markShown();
     setIsVisible(false);
     navigate(buildInternalHaloMiniLink(campaign, "popup"));
   };
@@ -56,7 +72,7 @@ export function HaloMiniPopup() {
         <button
           onClick={handleClose}
           className="absolute top-3 right-3 p-2 text-white/60 hover:text-white transition-colors z-10"
-          aria-label="Close"
+          aria-label={t("Close")}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -88,7 +104,7 @@ export function HaloMiniPopup() {
               <div className="absolute inset-0 bg-amber-400/30 blur-2xl rounded-full" />
               <img
                 src="/halo-mini-coin.webp"
-                alt="10,000 points"
+                alt={t("10,000 points")}
                 className="relative w-20 h-20 drop-shadow-[0_0_12px_rgba(251,191,36,0.4)]"
               />
             </div>

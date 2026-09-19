@@ -63,7 +63,7 @@ function BottomTab() {
             >
               <img
                 src={icon}
-                alt={`${label} icon`}
+                alt={t("{{label}} icon", { label })}
                 draggable={false}
                 onContextMenu={(e) => e.preventDefault()}
                 onDragStart={(e) => e.preventDefault()}

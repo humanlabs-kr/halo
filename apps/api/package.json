@@ -10,7 +10,7 @@
     "dev": "wrangler dev --port 8001",
     "build": "wrangler deploy --dry-run --outdir=dist",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run",
     "cf-codegen": "wrangler types",
     "deploy:staging": "wrangler deploy --env staging",
     "deploy:production": "wrangler deploy --env production",
@@ -20,23 +20,23 @@
     "@cf-wasm/photon": "^0.2.2",
     "@halo/contracts": "workspace:*",
     "@halo/database": "workspace:*",
-    "@hono/swagger-ui": "^0.5.1",
+    "@hono/swagger-ui": "^0.5.3",
     "@hono/zod-openapi": "^0.19.10",
-    "date-fns": "^4.1.0",
-    "hono": "^4.9.5",
+    "@worldcoin/minikit-js": "^2.0.3",
+    "date-fns": "^4.4.0",
+    "hono": "^4.13.8",
     "ksuid": "^3.0.0",
-    "openai": "^6.9.1",
-    "siwe": "^3.0.0",
-    "viem": "^2.39.0",
-    "zod": "^3.24.4"
+    "openai": "^6.49.0",
+    "viem": "^2.56.8",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^24.10.1",
-    "eslint": "^9.33.0",
-    "typescript": "^5.8.3",
-    "vitest": "^3.2.4",
+    "@types/node": "^24.13.5",
+    "eslint": "^9.39.5",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7",
     "wrangler": "4.48.0"
   }
 }

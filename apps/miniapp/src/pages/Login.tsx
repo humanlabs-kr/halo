@@ -59,7 +59,7 @@ function Login() {
       </div>
 
       <div className="mt-10 mb-2 flex flex-col items-center gap-3">
-        {error && <p className="px-2 text-sm text-red-500">{error}</p>}
+        {error && <p className="px-2 text-sm text-red-500">{t(error)}</p>}
         <button
           type="button"
           className={`w-full rounded-full bg-black py-4 text-base font-semibold text-white ${isLoading ? "opacity-50" : ""}`}
@@ -70,14 +70,14 @@ function Login() {
         </button>
       </div>
       <footer className="mt-4 mb-6 flex flex-col items-center gap-2 text-xs text-gray-400">
-        <p>Operated by Human Labs</p>
+        <p>{t("Operated by Human Labs")}</p>
         <div className="flex gap-3">
           <Link to="/terms" className="underline hover:text-gray-600">
-            Terms of Service
+            {t("Terms of Service")}
           </Link>
           <span>·</span>
           <Link to="/privacy" className="underline hover:text-gray-600">
-            Privacy Policy
+            {t("Privacy Policy")}
           </Link>
         </div>
       </footer>

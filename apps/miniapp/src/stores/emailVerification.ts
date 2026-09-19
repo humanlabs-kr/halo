@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Platform } from "@halo/contracts";
+import i18n from "@/lib/i18n";
 import { ApiRequestError, hasApiErrorCode } from "@/lib/api/client";
 import {
   haloEmailApi,
@@ -56,6 +57,10 @@ const initialState: EmailVerificationState = {
  * Typing these as the full code union rather than `Record<string, string>` is
  * the point: when the server adds a code, this stops compiling instead of
  * quietly falling through to the raw server message.
+ *
+ * The strings double as i18n keys — natural-language keys, see `lib/i18n` — and
+ * the screen runs `error` through `t()` before rendering it, so an untranslated
+ * locale falls back to exactly this English.
  */
 const SEND_CODE_ERRORS: Record<SendEmailCodeErrorCode, string> = {
   TURNSTILE_FAILED: "CAPTCHA verification failed. Please try again",
@@ -149,7 +154,9 @@ export const useEmailVerificationStore = create<EmailVerificationStore>()(
         const message =
           hasApiErrorCode(error, "COOLDOWN_ACTIVE") &&
           error instanceof ApiRequestError
-            ? `Please wait ${error.retryAfter ?? 60} seconds`
+            ? i18n.t("Please wait {{seconds}} seconds", {
+                seconds: error.retryAfter ?? 60,
+              })
             : errorMessage(SEND_CODE_ERRORS, error);
 
         set({ isLoading: false, error: message });
@@ -182,7 +189,9 @@ export const useEmailVerificationStore = create<EmailVerificationStore>()(
           set({
             isLoading: false,
             attemptsRemaining: remaining,
-            error: `Invalid code. ${remaining} attempts remaining`,
+            error: i18n.t("Invalid code. {{remaining}} attempts remaining", {
+              remaining,
+            }),
           });
           return false;
         }

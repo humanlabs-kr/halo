@@ -3,6 +3,10 @@ import { useTranslation } from "react-i18next";
 /**
  * Time left in the current raffle round. Rounds close at UTC midnight; the
  * caller owns the ticking clock so this stays a pure display component.
+ *
+ * The heading says what the digits below are counting. It used to read
+ * "Coming Soon" — a leftover from the Kaia build, which shipped this card
+ * before its raffle existed — over a live, ticking clock.
  */
 export default function RaffleCountdownCard({
   hours,
@@ -18,13 +22,13 @@ export default function RaffleCountdownCard({
   return (
     <section className="mt-4 rounded-[28px] bg-[#292929] px-6 py-4 text-white">
       <div className="flex flex-col items-center gap-3">
-        <p className="text-sm text-white/70">{t("L-fZMUbLsR")}</p>
+        <p className="text-sm text-white/70">{t("L-Rt7cQm4X")}</p>
         <div className="mx-auto flex max-w-[280px] items-center justify-between gap-3 text-white">
-          <CountdownBlock label="Hours" value={hours} />
+          <CountdownBlock label={t("Hours")} value={hours} />
           <span className="text-2xl font-semibold text-white/80">:</span>
-          <CountdownBlock label="Minutes" value={minutes} />
+          <CountdownBlock label={t("Minutes")} value={minutes} />
           <span className="text-2xl font-semibold text-white/80">:</span>
-          <CountdownBlock label="Seconds" value={seconds} />
+          <CountdownBlock label={t("Seconds")} value={seconds} />
         </div>
       </div>
     </section>

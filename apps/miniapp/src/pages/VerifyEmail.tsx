@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { Trans, useTranslation } from "react-i18next";
 import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { TURNSTILE_SITE_KEY } from "@/lib/env";
 import { useAuthStore } from "@/stores/auth";
@@ -8,6 +9,7 @@ import { useEmailVerificationStore } from "@/stores/emailVerification";
 type Step = "email" | "otp" | "success";
 
 function VerifyEmail() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/rewards";
@@ -185,7 +187,7 @@ function VerifyEmail() {
             type="button"
             onClick={handleBack}
             className="flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5]"
-            aria-label="Go back"
+            aria-label={t("Go back")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -200,15 +202,15 @@ function VerifyEmail() {
             </svg>
           </button>
           <h1 className="text-2xl font-bold">
-            {step === "email" && "Verify Email"}
-            {step === "otp" && "Enter Code"}
-            {step === "success" && "Verified!"}
+            {step === "email" && t("Verify Email")}
+            {step === "otp" && t("Enter Code")}
+            {step === "success" && t("Verified!")}
           </h1>
         </div>
         <p className="mt-2 pl-[52px] text-sm text-[#8D8D8D]">
-          {step === "email" && "Required to enter raffles"}
-          {step === "otp" && `Code sent to ${email}`}
-          {step === "success" && "Your email has been verified"}
+          {step === "email" && t("Required to enter raffles")}
+          {step === "otp" && t("Code sent to {{email}}", { email })}
+          {step === "success" && t("Your email has been verified")}
         </p>
       </div>
 
@@ -219,14 +221,14 @@ function VerifyEmail() {
           <div className="space-y-6">
             <div>
               <label className="mb-2 block text-sm font-semibold text-black">
-                Email Address
+                {t("Email Address")}
               </label>
               <input
                 type="email"
                 inputMode="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                placeholder="your@email.com"
+                placeholder={t("your@email.com")}
                 className="w-full rounded-2xl border-2 border-gray-200 bg-white px-4 py-4 text-[16px] text-black placeholder-gray-400 focus:border-black focus:outline-none"
                 autoComplete="email"
                 autoCapitalize="none"
@@ -235,7 +237,7 @@ function VerifyEmail() {
               />
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-red-500">{t(error)}</p>}
 
             <div className="flex justify-center">
               <Turnstile
@@ -258,11 +260,11 @@ function VerifyEmail() {
                   : "bg-[#D6D6D6] cursor-not-allowed"
               }`}
             >
-              {isLoading ? "Sending..." : "Send Verification Code"}
+              {isLoading ? t("Sending...") : t("Send Verification Code")}
             </button>
 
             <p className="text-center text-xs text-[#8D8D8D]">
-              Once verified, this email cannot be changed.
+              {t("Once verified, this email cannot be changed.")}
             </p>
           </div>
         )}
@@ -294,21 +296,24 @@ function VerifyEmail() {
             {/* Timer */}
             {timeLeft > 0 && (
               <p className="text-center text-sm text-[#8D8D8D]">
-                Code expires in{" "}
-                <span className="font-semibold text-black">
-                  {formatTime(timeLeft)}
-                </span>
+                <Trans
+                  i18nKey="Code expires in <strong>{{time}}</strong>"
+                  values={{ time: formatTime(timeLeft) }}
+                  components={{
+                    strong: <span className="font-semibold text-black" />,
+                  }}
+                />
               </p>
             )}
 
             {timeLeft === 0 && otpExpiresAt && (
               <p className="text-center text-sm text-red-500">
-                Code expired. Please request a new one.
+                {t("Code expired. Please request a new one.")}
               </p>
             )}
 
             {error && (
-              <p className="text-center text-sm text-red-500">{error}</p>
+              <p className="text-center text-sm text-red-500">{t(error)}</p>
             )}
 
             {/* Resend / Change Email */}
@@ -324,8 +329,8 @@ function VerifyEmail() {
                 }`}
               >
                 {cooldownLeft > 0
-                  ? `Resend in ${cooldownLeft}s`
-                  : "Resend Code"}
+                  ? t("Resend in {{seconds}}s", { seconds: cooldownLeft })
+                  : t("Resend Code")}
               </button>
               <span className="text-gray-300">|</span>
               <button
@@ -338,12 +343,12 @@ function VerifyEmail() {
                 disabled={isLoading}
                 className="text-sm font-medium text-black underline"
               >
-                Change Email
+                {t("Change Email")}
               </button>
             </div>
 
             {isLoading && (
-              <p className="text-center text-sm text-[#8D8D8D]">Verifying...</p>
+              <p className="text-center text-sm text-[#8D8D8D]">{t("Verifying...")}</p>
             )}
           </div>
         )}
@@ -368,7 +373,7 @@ function VerifyEmail() {
             </div>
 
             <div>
-              <p className="text-lg font-semibold text-black">Email Verified</p>
+              <p className="text-lg font-semibold text-black">{t("Email Verified")}</p>
               <p className="mt-1 text-sm text-[#8D8D8D]">{verifiedEmail}</p>
             </div>
 
@@ -377,7 +382,7 @@ function VerifyEmail() {
               onClick={handleSuccessContinue}
               className="w-full rounded-full bg-black py-4 text-base font-semibold text-white hover:bg-black/90"
             >
-              Continue to Raffle
+              {t("Continue to Raffle")}
             </button>
           </div>
         )}

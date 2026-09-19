@@ -5,6 +5,8 @@ import toast from "react-hot-toast";
 import Onboarding from "./Onboarding";
 import ClaimSuccessModal from "@/components/ClaimSuccessModal";
 import HaloMiniBannerCard from "@/components/HaloMiniBannerCard";
+import InviteFriendsCard from "@/components/InviteFriendsCard";
+import LanguageSelectorCard from "@/components/LanguageSelectorCard";
 import { useAuthStore } from "@/stores/auth";
 import { hasApiErrorCode } from "@/lib/api/client";
 import {
@@ -16,11 +18,13 @@ import {
   useReceiptTotalCount,
 } from "@/lib/api/queries";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/lib/format";
 import { useQueryClient } from "@tanstack/react-query";
 import { useConnection, useWriteContract } from "wagmi";
 import { POINT_CLAIM_ABI } from "@halo/contracts";
-import { HALO_SOCIAL_URL, SCAN_LIMIT } from "@/lib/constants";
+import { HALO_SOCIAL_URL, platformFeatures, SCAN_LIMIT } from "@/lib/constants";
 import { sendSuccessNotificationHaptic } from "@/lib/haptic";
+import { getSafeAreaInsetBottom } from "@/lib/safe-area";
 import { PLATFORM_CHAIN } from "@/lib/wagmi";
 
 /**
@@ -37,8 +41,11 @@ function calculateLevel(accumulatedPoints: number): number {
 }
 
 function Home() {
+  const { t } = useTranslation();
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [claimedPoints, setClaimedPoints] = useState(0);
+  const platform = useAuthStore((s) => s.platform);
+  const features = platformFeatures(platform);
 
   return (
     <>
@@ -55,19 +62,21 @@ function Home() {
           />
           <ProgressCard />
           <TwitterCard />
+          {features.lineInvite && <InviteFriendsCard />}
           <PromoCard />
           <TutorialCard />
           <TroubleshootCard />
+          <LanguageSelectorCard />
         </section>
         <footer className="mt-8 mb-16 flex flex-col items-center gap-2 text-xs text-gray-400">
-          <p>Operated by Human Labs</p>
+          <p>{t("Operated by Human Labs")}</p>
           <div className="flex gap-3">
             <Link to="/terms" className="underline hover:text-gray-600">
-              Terms of Service
+              {t("Terms of Service")}
             </Link>
             <span>·</span>
             <Link to="/privacy" className="underline hover:text-gray-600">
-              Privacy Policy
+              {t("Privacy Policy")}
             </Link>
           </div>
         </footer>
@@ -84,6 +93,8 @@ function Home() {
 }
 
 function HomeHeader() {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
   const user = useAuthStore((s) => s.user);
 
   const { data: pointStat } = usePointStat();
@@ -109,7 +120,7 @@ function HomeHeader() {
           {avatarUrl ? (
             <img
               src={avatarUrl}
-              alt="profile"
+              alt={t("profile")}
               className="h-full w-full object-cover mix-blend-multiply pointer-events-none"
               onError={() => setAvatarError(true)}
             />
@@ -124,12 +135,12 @@ function HomeHeader() {
             @{user?.username}
           </p>
           <p className="text-[18px] font-semibold">
-            {currentPoints.toLocaleString()} Pts
+            {t("{{points}} Pts", { points: fmt.number(currentPoints) })}
           </p>
         </div>
       </div>
       <span className="rounded-full bg-card-background px-4 py-1 text-sm font-semibold text-black">
-        Lv.{userLevel}
+        {t("Lv.{{level}}", { level: userLevel })}
       </span>
     </header>
   );
@@ -208,7 +219,7 @@ function TutorialCard() {
         <article className="pressed flex items-center gap-4 rounded-[28px] bg-card-background p-4 py-3.5 text-card-text cursor-pointer">
           <img
             src="/main-banner.png"
-            alt="Tutorial"
+            alt={t("Tutorial")}
             className="h-12 w-auto rounded-2xl bg-white object-cover mix-blend-darken"
           />
           <div className="flex-1 text-left">
@@ -217,7 +228,7 @@ function TutorialCard() {
             </p>
             <p className="text-sm">{t("L-7kqPke2P")}</p>
           </div>
-          <img src="/u_arrow-right.svg" alt="see more" className="h-6 w-6" />
+          <img src="/u_arrow-right.svg" alt={t("see more")} className="h-6 w-6" />
         </article>
       </Drawer.Trigger>
       <Drawer.Portal>
@@ -314,7 +325,7 @@ function TwitterCard() {
         <p className="text-base font-semibold text-black">Halo</p>
         <p className="text-sm">{t("L-oDJ81tHK")}</p>
       </div>
-      <img src="/u_arrow-right.svg" alt="see more" className="h-6 w-6" />
+      <img src="/u_arrow-right.svg" alt={t("see more")} className="h-6 w-6" />
     </article>
   );
 }
@@ -332,7 +343,7 @@ function PromoCard() {
     >
       <img
         src="/main-banner2.png"
-        alt="Promotion"
+        alt={t("Promotion")}
         className="pointer-events-none absolute inset-0 h-full w-full object-cover p-5"
       />
       <div className="relative z-10 mb-4 flex items-center justify-between">
@@ -342,7 +353,7 @@ function PromoCard() {
           </p>
           <p className="text-sm">{t("L-AncRaHJ5")}</p>
         </div>
-        <img src="/u_arrow-right.svg" alt="see more" className="h-6 w-6" />
+        <img src="/u_arrow-right.svg" alt={t("see more")} className="h-6 w-6" />
       </div>
     </article>
   );
@@ -366,6 +377,7 @@ function TotalReceiptCountCard() {
 }
 
 function AnimatedCounter({ value }: { value: number }) {
+  const fmt = useFormatters();
   const [displayValue, setDisplayValue] = useState(0);
   const previousValue = useRef(0);
 
@@ -401,19 +413,26 @@ function AnimatedCounter({ value }: { value: number }) {
 
   return (
     <span className="text-4xl font-bold tabular-nums">
-      {displayValue.toLocaleString()}
+      {fmt.number(displayValue)}
     </span>
   );
 }
+
+/** Height of the bottom tab bar the scan button floats above. */
+const TAB_BAR_CLEARANCE = 80;
 
 function ScanButton() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
+  // Sits above the tab bar, and above the home indicator on the devices that
+  // have one — otherwise the button and the indicator overlap.
+  const bottom = getSafeAreaInsetBottom() + TAB_BAR_CLEARANCE;
+
   return (
     <div
       className="pointer-events-none fixed left-1/2 z-50 -translate-x-1/2 px-5"
-      style={{ bottom: 80 }}
+      style={{ bottom }}
     >
       <button
         type="button"
@@ -489,7 +508,7 @@ function DailyClaimCard({
         markClaimedToday(DAILY_CLAIM_KEY.offchain);
         setIsOffchainClaimed(true);
       } else {
-        toast.error("Claim failed. Try logging out and back in.");
+        toast.error(t("Claim failed. Try logging out and back in."));
       }
     },
   });
@@ -526,7 +545,7 @@ function DailyClaimCard({
         markClaimedToday(DAILY_CLAIM_KEY.onchain);
         setIsOnchainClaimed(true);
       } else {
-        toast.error("Claim failed. Try logging out and back in.");
+        toast.error(t("Claim failed. Try logging out and back in."));
       }
     },
   });
@@ -557,7 +576,7 @@ function DailyClaimCard({
       onClick={() => claimOnchain.mutate()}
       disabled={isLoading}
     >
-      {isLoading ? t("L-qHrxRpu3") : "Bonus ⛓️"}
+      {isLoading ? t("L-qHrxRpu3") : t("Bonus ⛓️")}
     </button>
   ) : (
     <div className="rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white shadow-sm ring-2 ring-emerald-400/50">

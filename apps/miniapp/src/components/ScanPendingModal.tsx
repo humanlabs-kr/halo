@@ -17,7 +17,7 @@ function ScanPendingModal({
     <ModalCard
       icon={
         <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-slate-100">
-          <img src="/fi_clock.svg" alt="Pending review" className="h-9 w-9" />
+          <img src="/fi_clock.svg" alt={t("Pending review")} className="h-9 w-9" />
         </div>
       }
       title={t("L-Uy0mkspA")}

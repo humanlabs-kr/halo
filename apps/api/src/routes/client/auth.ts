@@ -1,10 +1,10 @@
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi';
-import { dataSchema, errorSchema } from '@halo/contracts';
+import { dataSchema, errorSchema, type Platform } from '@halo/contracts';
 import { blacklistedAddresses, eq, sql, users } from '@halo/database';
 import type { Context } from 'hono';
 import { deleteCookie, setCookie } from 'hono/cookie';
-import { SiweMessage } from 'siwe';
-import { getAddress, isAddress, verifyMessage } from 'viem';
+import { HTTPException } from 'hono/http-exception';
+import { isAddress } from 'viem';
 import { concealedAddress } from '../../lib/address';
 import { computeHmac, timingSafeEqual } from '../../lib/hmac';
 import {
@@ -13,6 +13,8 @@ import {
   signAccessToken,
   signRefreshToken,
 } from '../../lib/jwt';
+import { generateSiweNonce } from '../../lib/nonce';
+import { allowedDomainsFor, SiweError, verifySiwe } from '../../lib/siwe';
 import { userAuth } from '../../middleware/auth';
 import type { AppEnv } from '../../types';
 
@@ -33,6 +35,45 @@ const app = new OpenAPIHono<AppEnv>({
       );
     }
   },
+});
+
+/**
+ * A body the JSON parser chokes on is a bad request, not a server fault.
+ *
+ * Hono raises `HTTPException(400, 'Malformed JSON in request body')` from the
+ * request validator, before any handler here runs, and the app-wide
+ * `errorHandler` turns every error that escapes into a 500 carrying the
+ * message. These endpoints are the only unauthenticated write surface Halo
+ * has, so that hands anyone who can send `POST … {` a way to make the API
+ * report a server error — noise that buries real incidents, and a signal to
+ * whoever is probing that they found an edge nobody handled.
+ *
+ * It has to be `onError` and not a `try`/`catch` middleware: Hono's `compose`
+ * catches at the innermost dispatch and goes straight to the error handler, so
+ * an upstream middleware's `await next()` never sees the rejection. `route()`
+ * wraps a sub-app's handlers with its own error handler precisely when the
+ * sub-app defines one, which is what makes this apply after mounting.
+ *
+ * Deliberately scoped to this router: every other POST route in the API answers
+ * 500 to a malformed body too, and the general fix is for `errorHandler` to
+ * honour `HTTPException` rather than for each router to carry this.
+ */
+app.onError((error, c) => {
+  if (error instanceof HTTPException) {
+    return c.json(
+      {
+        error: {
+          code: error.status === 400 ? 'BAD_REQUEST' : 'INVALID_REQUEST',
+          message: error.message,
+        },
+      },
+      error.status,
+    );
+  }
+
+  // A genuine fault. Rethrow so the app-wide handler logs and reports it
+  // exactly as it did before.
+  throw error;
 });
 
 /**
@@ -62,16 +103,111 @@ function setSessionCookies(c: Context<AppEnv>, accessToken: string, refreshToken
 }
 
 /**
+ * Mints the cookie pair for an address whose signature has already been proved.
+ *
+ * `verified: true` on every platform now. The flag used to distinguish a
+ * MiniPay session — handed out on an address alone — from one backed by a
+ * signature. There is no longer any way to get the former: every route below
+ * goes through `verifySiwe` before it reaches here, so the only sessions that
+ * exist are verified ones. The claim is kept because `/auth/session/status`
+ * still reports it and older tokens still carry it.
+ */
+async function issueSession(c: Context<AppEnv>, address: `0x${string}`): Promise<void> {
+  const [accessToken, refreshToken] = await Promise.all([
+    signAccessToken(c.env.JWT_SECRET, { sub: address, verified: true }),
+    signRefreshToken(c.env.JWT_SECRET, { sub: address, verified: true }),
+  ]);
+
+  setSessionCookies(c, accessToken, refreshToken);
+}
+
+/**
+ * Proves the nonce is one we issued.
+ *
+ * This is necessary but nowhere near sufficient, and treating it as sufficient
+ * is exactly what made `celo-miniapp/connect` an account-takeover endpoint:
+ * the nonce endpoint is public, so anyone can hold a valid `(nonce, hmac)`
+ * pair. What binds the pair to a person is that the same nonce has to appear
+ * inside a message their wallet signed — see `verifySiwe`.
+ */
+async function isNonceOurs(env: Env, nonce: string, hmac: string): Promise<boolean> {
+  const computed = await computeHmac(nonce, env.SESSION_HMAC_SECRET);
+  return timingSafeEqual(computed, hmac);
+}
+
+/** Options common to every platform, assembled from the request env. */
+function siweContext(c: Context<AppEnv>, platform: Platform) {
+  return {
+    platform,
+    allowedDomains: allowedDomainsFor(c.env.PROJECT_ENV, c.env.LOCAL_ALLOWED_DOMAINS),
+    rpcUrl: platform === 'world' ? c.env.WORLDCHAIN_RPC_URL : c.env.KAIA_RPC_URL,
+  };
+}
+
+/**
+ * Maps a verification failure onto the wire.
+ *
+ * Everything is a 400: a caller who could not prove a signature made a bad
+ * request, and a 500 would both page us for other people's typos and tell an
+ * attacker when they have found an edge the verifier did not expect.
+ */
+function siweErrorBody(error: unknown): { error: { code: string; message: string } } {
+  if (error instanceof SiweError) {
+    return { error: { code: error.code, message: error.message } };
+  }
+
+  console.error('[auth] unexpected SIWE verification failure:', error);
+  return { error: { code: 'INVALID_SIWE_MESSAGE', message: 'Invalid SIWE message' } };
+}
+
+/**
+ * Upsert for the two chains that have no profile service behind them: the
+ * address is the whole identity, so the display name is derived from it.
+ */
+async function upsertWalletUser(
+  c: Context<AppEnv>,
+  platform: Platform,
+  address: `0x${string}`,
+): Promise<`0x${string}`> {
+  return c.get('db').transaction(async (tx) => {
+    const user = await tx
+      .insert(users)
+      .values({
+        platform,
+        address: address.toLowerCase() as `0x${string}`,
+        username: concealedAddress(address),
+        checksumAddress: address,
+      })
+      .onConflictDoUpdate({
+        target: users.address,
+        set: { username: concealedAddress(address) },
+      })
+      .returning({ address: users.address })
+      .then((res) => res.at(0)!);
+
+    return user.address;
+  });
+}
+
+/**
  * World username lookup.
  *
- * `@worldcoin/minikit-js` is not a dependency here, so we hit the public usernames API
- * directly — it is an unauthenticated GET and the SDK wrapper added nothing else.
+ * Hits the public usernames API directly: it is an unauthenticated GET, and
+ * `@worldcoin/minikit-js` has no server-side helper for it. This is only a
+ * profile fetch — it proves nothing about who is signing in, so its answer is
+ * never used to decide *which* account the session belongs to.
  * A miss (404) means the address has never been provisioned in World App.
+ *
+ * The `User-Agent` is not decoration. `usernames.worldcoin.org` answers 403 to
+ * any request that arrives without one, and the Workers runtime does not set a
+ * default — so omitting it turns every single World login into `USER_NOT_FOUND`.
  */
 async function fetchWorldUser(
   address: string,
 ): Promise<{ address: string; username: string | null; profile_picture_url: string | null } | null> {
-  const response = await fetch(`https://usernames.worldcoin.org/api/v1/${address}`);
+  const response = await fetch(`https://usernames.worldcoin.org/api/v1/${address}`, {
+    headers: { 'User-Agent': 'Cloudflare-Worker' },
+  });
 
   if (!response.ok) {
     return null;
@@ -84,6 +220,15 @@ async function fetchWorldUser(
   };
 }
 
+/**
+ * The wallet-auth payload shape World App returns, which Kaia reuses so that
+ * the two `complete` endpoints keep one request body between them.
+ *
+ * `signature` is deliberately not constrained to `0x…`: World App's v1 payload
+ * carries the signature *without* the prefix, and `@worldcoin/minikit-js` adds
+ * it back itself. Rejecting it here would turn every older World App client
+ * into a 400.
+ */
 const siweCompleteBody = z.object({
   nonce: z.string(),
   hmac: z.string(),
@@ -118,7 +263,7 @@ const nonceRoute = createRoute({
 });
 
 app.openapi(nonceRoute, async (c) => {
-  const nonce = crypto.randomUUID().replace(/-/g, '');
+  const nonce = generateSiweNonce();
   // Signed with the dedicated session secret rather than the JWT signing key: a leaked nonce
   // HMAC must not give anyone material to reason about the token signing key.
   const hmac = await computeHmac(nonce, c.env.SESSION_HMAC_SECRET);
@@ -143,7 +288,7 @@ const worldCompleteRoute = createRoute({
     },
     400: {
       description:
-        'INVALID_REQUEST (HMAC mismatch) / INVALID_SIWE_MESSAGE / USER_NOT_FOUND (no World App account)',
+        'INVALID_REQUEST (HMAC mismatch) / INVALID_SIWE_MESSAGE / ADDRESS_MISMATCH / INVALID_SIGNATURE / USER_NOT_FOUND (no World App account)',
       content: { 'application/json': { schema: errorSchema } },
     },
   },
@@ -152,35 +297,37 @@ const worldCompleteRoute = createRoute({
 app.openapi(worldCompleteRoute, async (c) => {
   const { nonce, hmac, payload } = c.req.valid('json');
 
-  const computedHmac = await computeHmac(nonce, c.env.SESSION_HMAC_SECRET);
-
-  if (!timingSafeEqual(computedHmac, hmac)) {
+  if (!(await isNonceOurs(c.env, nonce, hmac))) {
     return c.json(
       { error: { code: 'INVALID_REQUEST' as const, message: 'HMAC validation failed' } },
       400,
     );
   }
 
-  // The nonce is bound into the signed SIWE message, so verifying it here is what stops a
-  // captured signature from being replayed against a freshly minted nonce.
-  const siweMessage = new SiweMessage(payload.message);
-  let siweVerified = false;
-
-  try {
-    const { success } = await siweMessage.verify({ signature: payload.signature, nonce });
-    siweVerified = success;
-  } catch {
-    siweVerified = false;
-  }
-
-  if (!siweVerified) {
+  // Reject a malformed address before it reaches viem, which would throw on it.
+  if (!isAddress(payload.address)) {
     return c.json(
-      { error: { code: 'INVALID_SIWE_MESSAGE' as const, message: 'Invalid SIWE message' } },
+      { error: { code: 'INVALID_REQUEST' as const, message: 'Invalid address format' } },
       400,
     );
   }
 
-  const worldUserByAddress = await fetchWorldUser(payload.address);
+  let verifiedAddress: `0x${string}`;
+
+  try {
+    verifiedAddress = await verifySiwe({
+      ...siweContext(c, 'world'),
+      message: payload.message,
+      signature: payload.signature,
+      address: payload.address,
+      expectedNonce: nonce,
+      payloadVersion: payload.version,
+    });
+  } catch (error) {
+    return c.json(siweErrorBody(error), 400);
+  }
+
+  const worldUserByAddress = await fetchWorldUser(verifiedAddress);
 
   if (!worldUserByAddress) {
     return c.json({ error: { code: 'USER_NOT_FOUND' as const, message: 'User not found' } }, 400);
@@ -190,7 +337,9 @@ app.openapi(worldCompleteRoute, async (c) => {
 
   try {
     userAddress = await c.get('db').transaction(async (tx) => {
-      const address = getAddress(worldUserByAddress.address);
+      // Identity comes from the verified address, never from the address the
+      // username service echoed back — only the former carries a signature.
+      const address = verifiedAddress;
 
       const user = await tx
         .insert(users)
@@ -220,109 +369,29 @@ app.openapi(worldCompleteRoute, async (c) => {
     );
   }
 
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(c.env.JWT_SECRET, { sub: userAddress }),
-    signRefreshToken(c.env.JWT_SECRET, { sub: userAddress }),
-  ]);
-
-  setSessionCookies(c, accessToken, refreshToken);
-
-  return c.json({ data: { success: true as const } }, 200);
-});
-
-// ── POST /auth/session/celo-miniapp/complete ────────────────────────────────
-
-const celoCompleteRoute = createRoute({
-  method: 'post',
-  path: '/auth/session/celo-miniapp/complete',
-  tags: ['Auth'],
-  summary: 'Complete celo miniapp login request',
-  request: {
-    body: { required: true, content: { 'application/json': { schema: siweCompleteBody } } },
-  },
-  responses: {
-    200: {
-      description: 'Successfully created auth session',
-      content: { 'application/json': { schema: sessionCreatedSchema } },
-    },
-    400: {
-      description: 'INVALID_REQUEST (HMAC mismatch) / INVALID_SIWE_MESSAGE',
-      content: { 'application/json': { schema: errorSchema } },
-    },
-  },
-});
-
-app.openapi(celoCompleteRoute, async (c) => {
-  const { nonce, hmac, payload } = c.req.valid('json');
-
-  const computedHmac = await computeHmac(nonce, c.env.SESSION_HMAC_SECRET);
-
-  if (!timingSafeEqual(computedHmac, hmac)) {
-    return c.json(
-      { error: { code: 'INVALID_REQUEST' as const, message: 'HMAC validation failed' } },
-      400,
-    );
-  }
-
-  const siweMessage = new SiweMessage(payload.message);
-
-  try {
-    await siweMessage.verify({ signature: payload.signature });
-  } catch {
-    return c.json(
-      { error: { code: 'INVALID_SIWE_MESSAGE' as const, message: 'Invalid SIWE message' } },
-      400,
-    );
-  }
-
-  let userAddress: `0x${string}`;
-
-  try {
-    userAddress = await c.get('db').transaction(async (tx) => {
-      const address = getAddress(payload.address);
-
-      const user = await tx
-        .insert(users)
-        .values({
-          platform: 'celo',
-          address: address.toLowerCase() as `0x${string}`,
-          username: concealedAddress(address),
-          checksumAddress: address,
-        })
-        .onConflictDoUpdate({
-          target: users.address,
-          set: { username: concealedAddress(address) },
-        })
-        .returning({ address: users.address })
-        .then((res) => res.at(0)!);
-
-      return user.address;
-    });
-  } catch (error) {
-    console.error('[auth/celo-miniapp/complete] upsert failed:', error);
-    return c.json(
-      { error: { code: 'INVALID_REQUEST' as const, message: 'Failed to create session' } },
-      400,
-    );
-  }
-
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(c.env.JWT_SECRET, { sub: userAddress }),
-    signRefreshToken(c.env.JWT_SECRET, { sub: userAddress }),
-  ]);
-
-  setSessionCookies(c, accessToken, refreshToken);
+  await issueSession(c, userAddress);
 
   return c.json({ data: { success: true as const } }, 200);
 });
 
 // ── POST /auth/session/celo-miniapp/connect ─────────────────────────────────
 
+/**
+ * Still called `connect` because installed MiniPay clients post to this path,
+ * but it is no longer a connect: `message` and `signature` are required and the
+ * session is only issued once the wallet has proved the address.
+ *
+ * It used to take `{ nonce, hmac, address }` and hand back a session cookie for
+ * whatever address was named. The nonce and HMAC come from a public endpoint,
+ * so that was any address — and since World, Celo and Kaia share one `users`
+ * table and one JWT `sub`, a session for any address on this route was a
+ * session for that account on every platform.
+ */
 const celoConnectRoute = createRoute({
   method: 'post',
   path: '/auth/session/celo-miniapp/connect',
   tags: ['Auth'],
-  summary: 'Connect celo miniapp (MiniPay) - no signature required',
+  summary: 'Connect celo miniapp (MiniPay) with a SIWE signature',
   request: {
     body: {
       required: true,
@@ -332,6 +401,8 @@ const celoConnectRoute = createRoute({
             nonce: z.string(),
             hmac: z.string(),
             address: z.string().startsWith('0x'),
+            message: z.string(),
+            signature: z.string(),
           }),
         },
       },
@@ -343,18 +414,17 @@ const celoConnectRoute = createRoute({
       content: { 'application/json': { schema: sessionCreatedSchema } },
     },
     400: {
-      description: 'INVALID_REQUEST (HMAC mismatch) / INVALID_ADDRESS',
+      description:
+        'BAD_REQUEST (missing message/signature) / INVALID_REQUEST (HMAC mismatch) / INVALID_ADDRESS / INVALID_SIWE_MESSAGE / ADDRESS_MISMATCH / INVALID_SIGNATURE',
       content: { 'application/json': { schema: errorSchema } },
     },
   },
 });
 
 app.openapi(celoConnectRoute, async (c) => {
-  const { nonce, hmac, address } = c.req.valid('json');
+  const { nonce, hmac, address, message, signature } = c.req.valid('json');
 
-  const computedHmac = await computeHmac(nonce, c.env.SESSION_HMAC_SECRET);
-
-  if (!timingSafeEqual(computedHmac, hmac)) {
+  if (!(await isNonceOurs(c.env, nonce, hmac))) {
     return c.json(
       { error: { code: 'INVALID_REQUEST' as const, message: 'HMAC validation failed' } },
       400,
@@ -368,29 +438,24 @@ app.openapi(celoConnectRoute, async (c) => {
     );
   }
 
-  const checksumAddress = getAddress(address);
+  let verifiedAddress: `0x${string}`;
+
+  try {
+    verifiedAddress = await verifySiwe({
+      ...siweContext(c, 'celo'),
+      message,
+      signature,
+      address,
+      expectedNonce: nonce,
+    });
+  } catch (error) {
+    return c.json(siweErrorBody(error), 400);
+  }
 
   let userAddress: `0x${string}`;
 
   try {
-    userAddress = await c.get('db').transaction(async (tx) => {
-      const user = await tx
-        .insert(users)
-        .values({
-          platform: 'celo',
-          address: checksumAddress.toLowerCase() as `0x${string}`,
-          username: concealedAddress(checksumAddress),
-          checksumAddress,
-        })
-        .onConflictDoUpdate({
-          target: users.address,
-          set: { username: concealedAddress(checksumAddress) },
-        })
-        .returning({ address: users.address })
-        .then((res) => res.at(0)!);
-
-      return user.address;
-    });
+    userAddress = await upsertWalletUser(c, 'celo', verifiedAddress);
   } catch (error) {
     console.error('[auth/celo-miniapp/connect] upsert failed:', error);
     return c.json(
@@ -399,84 +464,7 @@ app.openapi(celoConnectRoute, async (c) => {
     );
   }
 
-  // MiniPay hands us an address without a signature, so the session starts unverified.
-  // `/auth/session/celo-miniapp/verify` is what upgrades it once the wallet signs.
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(c.env.JWT_SECRET, { sub: userAddress, verified: false }),
-    signRefreshToken(c.env.JWT_SECRET, { sub: userAddress, verified: false }),
-  ]);
-
-  setSessionCookies(c, accessToken, refreshToken);
-
-  return c.json({ data: { success: true as const } }, 200);
-});
-
-// ── POST /auth/session/celo-miniapp/verify ──────────────────────────────────
-
-const celoVerifyRoute = createRoute({
-  method: 'post',
-  path: '/auth/session/celo-miniapp/verify',
-  tags: ['Auth'],
-  summary: 'Verify wallet ownership via SIWE for celo miniapp',
-  middleware: [userAuth] as const,
-  request: {
-    body: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: z.object({ message: z.string(), signature: z.string() }),
-        },
-      },
-    },
-  },
-  responses: {
-    200: {
-      description: 'Successfully verified wallet ownership',
-      content: { 'application/json': { schema: sessionCreatedSchema } },
-    },
-    400: {
-      description: "INVALID_SIWE_MESSAGE / ADDRESS_MISMATCH (signed address isn't the session's)",
-      content: { 'application/json': { schema: errorSchema } },
-    },
-    401: { description: 'Unauthorized', content: { 'application/json': { schema: errorSchema } } },
-  },
-});
-
-app.openapi(celoVerifyRoute, async (c) => {
-  const { message, signature } = c.req.valid('json');
-  const sessionAddress = c.get('address')!;
-
-  const siweMessage = new SiweMessage(message);
-
-  try {
-    await siweMessage.verify({ signature });
-  } catch {
-    return c.json(
-      { error: { code: 'INVALID_SIWE_MESSAGE' as const, message: 'Invalid SIWE signature' } },
-      400,
-    );
-  }
-
-  if (siweMessage.address.toLowerCase() !== sessionAddress.toLowerCase()) {
-    return c.json(
-      {
-        error: {
-          code: 'ADDRESS_MISMATCH' as const,
-          message: 'Signed address does not match session address',
-        },
-      },
-      400,
-    );
-  }
-
-  // Reissue both tokens with `verified: true` — the claim lives in the token, so an in-place
-  // flag flip elsewhere would not reach a client already holding the old one.
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(c.env.JWT_SECRET, { sub: sessionAddress, verified: true }),
-    signRefreshToken(c.env.JWT_SECRET, { sub: sessionAddress, verified: true }),
-  ]);
-
-  setSessionCookies(c, accessToken, refreshToken);
+  await issueSession(c, userAddress);
 
   return c.json({ data: { success: true as const } }, 200);
 });
@@ -497,7 +485,8 @@ const kaiaCompleteRoute = createRoute({
       content: { 'application/json': { schema: sessionCreatedSchema } },
     },
     400: {
-      description: 'INVALID_REQUEST (HMAC mismatch) / INVALID_SIGNATURE',
+      description:
+        'INVALID_REQUEST (HMAC mismatch) / INVALID_SIWE_MESSAGE / ADDRESS_MISMATCH / INVALID_SIGNATURE',
       content: { 'application/json': { schema: errorSchema } },
     },
   },
@@ -506,52 +495,42 @@ const kaiaCompleteRoute = createRoute({
 app.openapi(kaiaCompleteRoute, async (c) => {
   const { nonce, hmac, payload } = c.req.valid('json');
 
-  const computedHmac = await computeHmac(nonce, c.env.SESSION_HMAC_SECRET);
-
-  if (!timingSafeEqual(computedHmac, hmac)) {
+  if (!(await isNonceOurs(c.env, nonce, hmac))) {
     return c.json(
       { error: { code: 'INVALID_REQUEST' as const, message: 'HMAC validation failed' } },
       400,
     );
   }
 
-  // `kaia_connectAndSign` produces an EIP-191 personal_sign signature, not a SIWE envelope —
-  // running it through the SIWE parser would reject every valid Kaia login.
-  const address = getAddress(payload.address);
-  const isValidSignature = await verifyMessage({
-    address,
-    message: payload.message,
-    signature: payload.signature as `0x${string}`,
-  });
-
-  if (!isValidSignature) {
+  if (!isAddress(payload.address)) {
     return c.json(
-      { error: { code: 'INVALID_SIGNATURE' as const, message: 'Invalid signature' } },
+      { error: { code: 'INVALID_REQUEST' as const, message: 'Invalid address format' } },
       400,
     );
+  }
+
+  // Kaia used to sign a fixed sentence with no nonce in it, so one captured
+  // signature was a permanent credential — replayable against any nonce this
+  // endpoint would happily mint. It now signs a real EIP-4361 message and goes
+  // through the same verifier as the other two chains.
+  let verifiedAddress: `0x${string}`;
+
+  try {
+    verifiedAddress = await verifySiwe({
+      ...siweContext(c, 'kaia'),
+      message: payload.message,
+      signature: payload.signature,
+      address: payload.address,
+      expectedNonce: nonce,
+    });
+  } catch (error) {
+    return c.json(siweErrorBody(error), 400);
   }
 
   let userAddress: `0x${string}`;
 
   try {
-    userAddress = await c.get('db').transaction(async (tx) => {
-      const user = await tx
-        .insert(users)
-        .values({
-          platform: 'kaia',
-          address: address.toLowerCase() as `0x${string}`,
-          username: concealedAddress(address),
-          checksumAddress: address,
-        })
-        .onConflictDoUpdate({
-          target: users.address,
-          set: { username: concealedAddress(address) },
-        })
-        .returning({ address: users.address })
-        .then((res) => res.at(0)!);
-
-      return user.address;
-    });
+    userAddress = await upsertWalletUser(c, 'kaia', verifiedAddress);
   } catch (error) {
     console.error('[auth/kaia-miniapp/complete] upsert failed:', error);
     return c.json(
@@ -560,12 +539,7 @@ app.openapi(kaiaCompleteRoute, async (c) => {
     );
   }
 
-  const [accessToken, refreshToken] = await Promise.all([
-    signAccessToken(c.env.JWT_SECRET, { sub: userAddress }),
-    signRefreshToken(c.env.JWT_SECRET, { sub: userAddress }),
-  ]);
-
-  setSessionCookies(c, accessToken, refreshToken);
+  await issueSession(c, userAddress);
 
   return c.json({ data: { success: true as const } }, 200);
 });
@@ -660,5 +634,20 @@ app.openapi(revokeRoute, async (c) => {
 
   return c.json({ data: { success: true as const } }, 200);
 });
+
+/**
+ * Removed here, not deprecated:
+ *
+ *  - `POST /auth/session/celo-miniapp/complete` had no callers. It did what the
+ *    fixed `connect` above now does — same platform, same SIWE proof, same
+ *    upsert — so keeping it would leave a second door into the same session
+ *    minting code, differing only in request shape. Two doors that must stay in
+ *    step is how `connect` came to be missing a signature check in the first
+ *    place.
+ *  - `POST /auth/session/celo-miniapp/verify` had no callers either. It existed
+ *    to upgrade an unverified MiniPay session to `verified: true` after the
+ *    fact. Unverified sessions can no longer be minted, so there is nothing
+ *    left for it to upgrade.
+ */
 
 export const clientAuthRoutes = app;

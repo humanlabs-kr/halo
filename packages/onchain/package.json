@@ -12,17 +12,17 @@
     "upgrade": "tsx scripts/upgrade-point-claim.ts"
   },
   "dependencies": {
-    "dotenv": "^16.0.0",
-    "viem": "^2.39.0"
+    "dotenv": "^16.6.1",
+    "viem": "^2.56.8"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "5.4.0",
     "@openzeppelin/contracts-upgradeable": "5.4.0",
     "@repo/eslint-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
-    "@types/node": "^24.10.1",
-    "eslint": "^9.33.0",
-    "tsx": "^4.20.5",
-    "typescript": "^5.8.3"
+    "@types/node": "^24.13.5",
+    "eslint": "^9.39.5",
+    "tsx": "^4.23.13",
+    "typescript": "^5.9.3"
   }
 }

@@ -1,8 +1,9 @@
+import { PLATFORM_CHAIN_ID, SIWE_MESSAGE_TTL_MS, SIWE_VERSION } from '@halo/contracts';
 import { getAddress, type EIP1193Provider } from 'viem';
-import { connect, getAccount } from 'wagmi/actions';
-import { authApi } from '@/lib/api/auth';
+import { createSiweMessage } from 'viem/siwe';
+import { connect, getAccount, signMessage } from 'wagmi/actions';
 import { getWagmiConfig } from '@/lib/wagmi';
-import { AuthError, type AuthAdapter, type AuthChallenge } from './types';
+import { AuthError, type AuthAdapter, type SignInArgs, type SignInResult } from './types';
 
 declare global {
   interface Window {
@@ -11,9 +12,17 @@ declare global {
 }
 
 /**
- * MiniPay injects an EIP-1193 provider but does not implement `personal_sign`,
- * so there is no signature to verify: the server binds the session to the
- * address returned by `eth_requestAccounts`, gated by the HMAC'd nonce.
+ * MiniPay (Celo).
+ *
+ * This adapter used to hand the API a bare address and no signature, on the
+ * premise that MiniPay cannot sign. That premise was wrong: MiniPay's injected
+ * provider implements `personal_sign`, and our own humantap has been taking
+ * SIWE signatures from it in production. The cost of believing it was an
+ * endpoint that issued a session for any address anyone cared to name.
+ *
+ * MiniPay signs with an EOA — the wallet offers seed-phrase export, which only
+ * a key-backed account can do — so the server verifies by recovering the
+ * signer.
  */
 export const celoAdapter: AuthAdapter = {
   platform: 'celo',
@@ -26,11 +35,13 @@ export const celoAdapter: AuthAdapter = {
     return typeof window !== 'undefined' && Boolean(window.ethereum);
   },
 
-  async signIn({ nonce, hmac }: AuthChallenge) {
+  async signIn(args: SignInArgs): Promise<SignInResult> {
     const provider = window.ethereum;
     if (!provider) {
       throw new AuthError('unavailable', 'Open this mini app inside MiniPay to sign in.');
     }
+
+    const config = getWagmiConfig();
 
     // Connect through wagmi rather than calling `eth_requestAccounts`
     // directly: Celo is the chain that later sends claim and spend
@@ -38,7 +49,6 @@ export const celoAdapter: AuthAdapter = {
     // around it would leave the app authenticated but unable to transact.
     let address: `0x${string}`;
     try {
-      const config = getWagmiConfig();
       const account = getAccount(config);
       if (account.address) {
         address = account.address;
@@ -59,8 +69,44 @@ export const celoAdapter: AuthAdapter = {
       throw new AuthError('cancelled', 'Wallet connection was declined.');
     }
 
-    await authApi.connectCelo({ nonce, hmac, address }).catch(() => {
-      throw new AuthError('rejected', 'Sign-in could not be completed. Please try again.');
+    const message = createSiweMessage({
+      domain: args.domain,
+      address,
+      statement: args.statement,
+      uri: args.uri,
+      version: SIWE_VERSION,
+      chainId: PLATFORM_CHAIN_ID.celo,
+      nonce: args.nonce,
+      issuedAt: new Date(),
+      // Required by the API. A signed message with no expiry is a permanent
+      // credential for whoever captures it, because our nonces are stateless
+      // HMACs with nothing in them that ages out.
+      expirationTime: new Date(Date.now() + SIWE_MESSAGE_TTL_MS),
     });
+
+    let signature: `0x${string}`;
+    try {
+      signature = await signMessage(config, { account: address, message });
+    } catch (error) {
+      if (error instanceof AuthError) throw error;
+      throw new AuthError('cancelled', 'Signature request was declined.');
+    }
+
+    return { address, message, signature, version: 1 };
   },
+
+  // No `disconnect`. EIP-1193 has no disconnect — a dapp cannot un-ask for an
+  // account, and MiniPay's injected provider adds nothing that does. The
+  // candidate would be `wallet_revokePermissions`, but that is a MetaMask
+  // extension to EIP-2255 rather than part of the standard, and MiniPay does
+  // not advertise it; calling it blind would just throw "unsupported method"
+  // on every sign-out. (Not verified against a real MiniPay build — see the
+  // note in the task report.)
+  //
+  // wagmi's `disconnect()` was the other candidate and is a different thing:
+  // it clears *our* client-side connection state, not the wallet's
+  // authorisation. The next `eth_requestAccounts` re-authorises silently
+  // regardless, so it would cost a reconnect without letting anyone switch
+  // accounts. MiniPay is a single-account host wallet anyway — like World App,
+  // switching accounts is done in the wallet, not from here.
 };

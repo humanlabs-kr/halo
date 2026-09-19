@@ -2,13 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import { sendLightImpactHaptic } from "@/lib/haptic";
 import { useTranslation } from "react-i18next";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
+import { useFormatters } from "@/lib/format";
 import type { PointLog, PointLogSourceType } from "@/lib/api/point";
 import { usePointLogs } from "@/lib/api/queries";
-
-dayjs.extend(relativeTime);
-dayjs.locale("en");
 
 function PointLogs() {
   const { t } = useTranslation();
@@ -59,7 +55,7 @@ function PointLogs() {
                 navigate(-1);
               }}
               className="flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition"
-              aria-label="Go back"
+              aria-label={t("Go back")}
             >
               <svg
                 viewBox="0 0 20 20"
@@ -82,7 +78,7 @@ function PointLogs() {
             className={`flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition ${
               isFetching ? "opacity-50" : ""
             }`}
-            aria-label="Refresh"
+            aria-label={t("Refresh")}
           >
             <svg
               viewBox="0 0 24 24"
@@ -109,10 +105,10 @@ function PointLogs() {
         ) : error ? (
           <div className="mt-8 flex flex-col items-center justify-center py-12">
             <p className="mb-1.5 text-base font-semibold text-black">
-              Error loading point logs
+              {t("Error loading point logs")}
             </p>
             <p className="mb-6 text-center text-sm text-[#8D8D8D]">
-              Please try again later
+              {t("Please try again later")}
             </p>
           </div>
         ) : !apiData || apiData.list.length === 0 ? (
@@ -141,6 +137,7 @@ function PointLogs() {
 
 function PointLogCell({ log }: { log: PointLog }) {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const isPositive = log.diff > 0;
 
   const sourceTypeLabels: Record<PointLogSourceType, string> = {
@@ -162,19 +159,17 @@ function PointLogCell({ log }: { log: PointLog }) {
             }`}
           >
             {isPositive ? "+" : ""}
-            {log.diff.toLocaleString()}Pt
+            {t("{{points}}Pt", { points: fmt.number(log.diff) })}
           </p>
           <span className="text-xs text-[#8D8D8D]">
             {sourceTypeLabels[log.sourceType]}
           </span>
         </div>
-        <p className="text-xs text-[#6C6C6C]">
-          {dayjs(log.createdAt).fromNow()}
-        </p>
+        <p className="text-xs text-[#6C6C6C]">{fmt.relative(log.createdAt)}</p>
       </div>
       <div className="text-right ml-4">
         <p className="text-sm font-semibold text-black">
-          {log.afterBalance.toLocaleString()}Pt
+          {t("{{points}}Pt", { points: fmt.number(log.afterBalance) })}
         </p>
         <p className="text-xs text-[#8D8D8D]">{t("L-UUfOZ5zC")}</p>
       </div>
@@ -193,6 +188,8 @@ function Pagination({
   onPrevious: () => void;
   onNext: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-6 flex items-center justify-center gap-4">
       <button
@@ -202,7 +199,7 @@ function Pagination({
         className={`flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition ${
           currentPage === 1 ? "opacity-40 cursor-not-allowed" : ""
         }`}
-        aria-label="Previous page"
+        aria-label={t("Previous page")}
       >
         <svg
           viewBox="0 0 20 20"
@@ -217,7 +214,10 @@ function Pagination({
         </svg>
       </button>
       <span className="text-sm font-semibold text-black">
-        Page {currentPage} of {totalPages}
+        {t("Page {{current}} of {{total}}", {
+          current: currentPage,
+          total: totalPages,
+        })}
       </span>
       <button
         type="button"
@@ -226,7 +226,7 @@ function Pagination({
         className={`flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition ${
           currentPage === totalPages ? "opacity-40 cursor-not-allowed" : ""
         }`}
-        aria-label="Next page"
+        aria-label={t("Next page")}
       >
         <svg
           viewBox="0 0 20 20"
@@ -251,7 +251,7 @@ function EmptyState() {
       <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-[#F4F4F4]">
         <img
           src="/u_receipt.svg"
-          alt="Point Logs"
+          alt={t("L-zLWwptzn")}
           className="h-8 w-8 opacity-40"
         />
       </div>

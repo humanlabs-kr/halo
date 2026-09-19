@@ -1,7 +1,10 @@
+import { useTranslation } from "react-i18next";
 import ModalCard from "./ModalCard";
 import { SUPPORT_EMAIL } from "@/lib/env";
 
 function BlacklistModal() {
+  const { t } = useTranslation();
+
   return (
     <ModalCard
       icon={
@@ -22,13 +25,17 @@ function BlacklistModal() {
           </svg>
         </div>
       }
-      title="Account Suspended"
+      title={t("Account Suspended")}
       description={
         <div className="space-y-3">
-          <p>This account has been suspended for violating our terms of service.</p>
+          <p>
+            {t("This account has been suspended for violating our terms of service.")}
+          </p>
           <p className="text-xs text-slate-400">
-            If you believe this is a mistake, contact {SUPPORT_EMAIL} with a
-            screenshot, your wallet address, and which chain you are using.
+            {t(
+              "If you believe this is a mistake, contact {{email}} with a screenshot, your wallet address, and which chain you are using.",
+              { email: SUPPORT_EMAIL },
+            )}
           </p>
         </div>
       }

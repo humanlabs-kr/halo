@@ -96,14 +96,24 @@ export function usePointClaim(): PointClaim {
         });
         if (finalPayload.status === 'error') return null;
 
+        // MiniKit 1.11 added a second success shape. Asking for several
+        // verification levels at once answers with `verifications[]` instead of
+        // one proof inline, and both shapes carry `status: 'success'`, so ruling
+        // out the error case no longer leaves a single type. We only ever ask
+        // for one level, so the array shape should not come back — but read it
+        // rather than assert, because the alternative is a cast that would go
+        // on compiling if that ever stopped being true.
+        const verification = 'verifications' in finalPayload ? finalPayload.verifications[0] : finalPayload;
+        if (!verification) return null;
+
         const { claimedPoint } = await pointApi.claim({
           platform: 'world',
-          proof: finalPayload.proof,
+          proof: verification.proof,
           // MiniKit types this as its own enum; the API takes the literal.
           verification_level:
-            finalPayload.verification_level === VerificationLevel.Orb ? 'orb' : 'device',
-          merkle_root: finalPayload.merkle_root,
-          nullifier_hash: finalPayload.nullifier_hash,
+            verification.verification_level === VerificationLevel.Orb ? 'orb' : 'device',
+          merkle_root: verification.merkle_root,
+          nullifier_hash: verification.nullifier_hash,
           signal: WORLD_CLAIM_ACTION,
           action: WORLD_CLAIM_ACTION,
         });

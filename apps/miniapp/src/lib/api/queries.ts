@@ -164,10 +164,12 @@ export const raffleHistoryQueryKey = (platform: Platform | null, date: string) =
 export function useRaffleHistory(
   platform: Platform | null,
   date: string,
+  tuning: QueryTuning = {},
 ): UseQueryResult<RaffleHistoryView, Error> {
   return useQuery({
     queryKey: raffleHistoryQueryKey(platform, date),
     queryFn: platform ? () => fetchRaffleHistory(platform, date) : skipToken,
+    ...tuning,
   });
 }
 

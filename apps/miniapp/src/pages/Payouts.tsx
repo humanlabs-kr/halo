@@ -1,16 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
+import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/lib/format";
 import { useRafflePayouts } from "@/lib/api/queries";
 import type { HaloRaffleChain, HaloRafflePayout } from "@/lib/api/raffle";
 import { EXPLORER_TX_URL, REWARD_CURRENCY } from "@/lib/constants";
 import { useAuthStore } from "@/stores/auth";
 
-dayjs.extend(relativeTime);
-dayjs.locale("en");
-
 function Payouts() {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
   const navigate = useNavigate();
   const platform = useAuthStore((s) => s.platform);
   const [page, setPage] = useState(1);
@@ -53,7 +52,7 @@ function Payouts() {
             type="button"
             onClick={() => navigate(-1)}
             className="flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5]"
-            aria-label="Go back"
+            aria-label={t("Go back")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -67,7 +66,7 @@ function Payouts() {
               <path d="M12 15l-5-5 5-5" />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold">Payouts</h1>
+          <h1 className="text-2xl font-bold">{t("Payouts")}</h1>
         </div>
       </div>
 
@@ -77,23 +76,23 @@ function Payouts() {
           <div className="mt-4 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-4 ring-1 ring-emerald-200/50">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-emerald-700/70">Total Paid Out</p>
+                <p className="text-xs text-emerald-700/70">{t("Total Paid Out")}</p>
                 <p className="text-xl font-bold text-emerald-700">
                   $
-                  {apiData.summary.totalPaid.toLocaleString(undefined, {
+                  {fmt.number(apiData.summary.totalPaid, {
                     maximumFractionDigits: 2,
                   })}
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-emerald-700/70">Winners</p>
+                <p className="text-xs text-emerald-700/70">{t("Winners")}</p>
                 <p className="text-xl font-bold text-emerald-700">
-                  {apiData.summary.totalPaidCount.toLocaleString()}
+                  {fmt.number(apiData.summary.totalPaidCount)}
                 </p>
               </div>
             </div>
             <p className="mt-2 text-center text-xs text-emerald-600/60">
-              All payouts verified on-chain
+              {t("All payouts verified on-chain")}
             </p>
           </div>
         )}
@@ -101,15 +100,15 @@ function Payouts() {
         {isLoading || isFetching ? (
           <div className="mt-8 flex flex-col items-center justify-center py-12">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#F4F4F4] border-t-black" />
-            <p className="mt-4 text-sm text-[#8D8D8D]">Loading...</p>
+            <p className="mt-4 text-sm text-[#8D8D8D]">{t("L-W9Q0CklX")}</p>
           </div>
         ) : error ? (
           <div className="mt-8 flex flex-col items-center justify-center py-12">
             <p className="mb-1.5 text-base font-semibold text-black">
-              Error loading payouts
+              {t("Error loading payouts")}
             </p>
             <p className="mb-6 text-center text-sm text-[#8D8D8D]">
-              Please try again later
+              {t("Please try again later")}
             </p>
           </div>
         ) : !apiData || apiData.payouts.length === 0 ? (
@@ -150,6 +149,8 @@ function PayoutCard({
   currency: string;
   explorerTxUrl: string;
 }) {
+  const { t } = useTranslation();
+  const fmt = useFormatters();
   const displayName = payout.winner.username
     ? `@${payout.winner.username}`
     : `${payout.winner.address.slice(0, 8)}...${payout.winner.address.slice(-4)}`;
@@ -159,13 +160,11 @@ function PayoutCard({
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
           <p className="text-base font-semibold text-black">
-            {payout.amountInUSDT} {currency}
+            {fmt.amount(payout.amountInUSDT)} {currency}
           </p>
           <span className="truncate text-xs text-[#666666]">{displayName}</span>
         </div>
-        <p className="text-xs text-[#8D8D8D]">
-          {dayjs(payout.utcDate).format("MMM D, YYYY")}
-        </p>
+        <p className="text-xs text-[#8D8D8D]">{fmt.date(payout.utcDate)}</p>
       </div>
       <a
         href={`${explorerTxUrl}${payout.txHash}`}
@@ -174,7 +173,7 @@ function PayoutCard({
         className="ml-3 shrink-0 rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold text-white shadow-sm ring-2 ring-emerald-400/50"
         onClick={(e) => e.stopPropagation()}
       >
-        View TX
+        {t("View TX")}
       </a>
     </article>
   );
@@ -191,6 +190,8 @@ function Pagination({
   onPrevious: () => void;
   onNext: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-6 flex items-center justify-center gap-4">
       <button
@@ -200,7 +201,7 @@ function Pagination({
         className={`flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5] ${
           currentPage === 1 ? "cursor-not-allowed opacity-40" : ""
         }`}
-        aria-label="Previous page"
+        aria-label={t("Previous page")}
       >
         <svg
           viewBox="0 0 20 20"
@@ -215,7 +216,10 @@ function Pagination({
         </svg>
       </button>
       <span className="text-sm font-semibold text-black">
-        Page {currentPage} of {totalPages}
+        {t("Page {{current}} of {{total}}", {
+          current: currentPage,
+          total: totalPages,
+        })}
       </span>
       <button
         type="button"
@@ -224,7 +228,7 @@ function Pagination({
         className={`flex size-10 items-center justify-center rounded-full bg-[#F4F4F4] transition hover:bg-[#E5E5E5] ${
           currentPage === totalPages ? "cursor-not-allowed opacity-40" : ""
         }`}
-        aria-label="Next page"
+        aria-label={t("Next page")}
       >
         <svg
           viewBox="0 0 20 20"
@@ -243,16 +247,18 @@ function Pagination({
 }
 
 function EmptyState() {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-8 flex flex-col items-center justify-center py-12">
       <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-[#F4F4F4]">
-        <img src="/u_gift.svg" alt="Payouts" className="h-8 w-8 opacity-40" />
+        <img src="/u_gift.svg" alt={t("Payouts")} className="h-8 w-8 opacity-40" />
       </div>
       <p className="mb-1.5 text-base font-semibold text-black">
-        No payouts yet
+        {t("No payouts yet")}
       </p>
       <p className="mb-6 text-center text-sm text-[#8D8D8D]">
-        Verified on-chain payouts will appear here
+        {t("Verified on-chain payouts will appear here")}
       </p>
     </div>
   );

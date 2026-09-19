@@ -3,11 +3,12 @@ import type { ReceiptStatus } from "@halo/contracts";
 import { receiptApi } from "@/lib/api/receipt";
 import { useReceipt } from "@/lib/api/queries";
 import PageHeader from "@/components/PageHeader";
-import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/lib/format";
 
 function HistoryDetail() {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const { receiptId } = useParams<{ receiptId: string }>();
   const navigate = useNavigate();
 
@@ -32,7 +33,7 @@ function HistoryDetail() {
     return (
       <div className="flex h-full flex-col bg-white text-black">
         <div className="px-5 pt-6">
-          <PageHeader title="Receipt Detail" />
+          <PageHeader title={t("Receipt Detail")} />
         </div>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-base text-[#8D8D8D]">{t("L-rFZZlscX")}</p>
@@ -60,7 +61,7 @@ function HistoryDetail() {
             navigate(-1);
           }}
           className="flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition"
-          aria-label="Go back"
+          aria-label={t("Go back")}
         >
           <svg
             viewBox="0 0 20 20"
@@ -93,7 +94,7 @@ function HistoryDetail() {
               navigate(-1);
             }}
             className="flex items-center justify-center size-10 rounded-full bg-[#F4F4F4] hover:bg-[#E5E5E5] transition"
-            aria-label="Go back"
+            aria-label={t("Go back")}
           >
             <svg
               viewBox="0 0 20 20"
@@ -119,7 +120,7 @@ function HistoryDetail() {
               <div className="relative w-full rounded-[28px] overflow-hidden bg-[#F4F4F4]">
                 <img
                   src={receiptApi.imageUrl(receipt.id, receipt.images[0]!.id)}
-                  alt="Receipt"
+                  alt={t("Receipt")}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -140,7 +141,9 @@ function HistoryDetail() {
                     >
                       <img
                         src={receiptApi.imageUrl(receipt.id, image.id)}
-                        alt={`Receipt image ${index + 1}`}
+                        alt={t("Receipt image {{number}}", {
+                          number: index + 1,
+                        })}
                         className="w-full h-full object-contain"
                       />
                     </div>
@@ -197,7 +200,7 @@ function HistoryDetail() {
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold text-black">
                   {receipt.currency}{" "}
-                  {Number(receipt.totalAmount).toLocaleString("en-US", {
+                  {fmt.number(Number(receipt.totalAmount), {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2,
                   })}
@@ -215,11 +218,11 @@ function HistoryDetail() {
                 {t("L-G9hXzMVF")}
               </p>
               <p className="text-xl font-bold text-black">
-                {receipt.assignedPoint || 0} Pts
+                {t("{{points}} Pts", { points: fmt.number(receipt.assignedPoint || 0) })}
               </p>
             </div>
             <div className="flex items-center justify-center size-12 rounded-full bg-white">
-              <img src="/u_gift.svg" alt="Points" className="h-6 w-6" />
+              <img src="/u_gift.svg" alt={t("Points")} className="h-6 w-6" />
             </div>
           </div>
         </article>
@@ -233,7 +236,7 @@ function HistoryDetail() {
             {receipt.issuedAt && (
               <DetailRow
                 label={t("L-hCsmUods")}
-                value={dayjs(receipt.issuedAt).format("MMMM D, YYYY h:mm A")}
+                value={fmt.dateTime(receipt.issuedAt)}
               />
             )}
             {/* {receipt.paymentMethod && (
@@ -244,7 +247,7 @@ function HistoryDetail() {
             )}
             <DetailRow
               label={t("L-pSOJ71RM")}
-              value={dayjs(receipt.createdAt).format("MMMM D, YYYY h:mm A")}
+              value={fmt.dateTime(receipt.createdAt)}
             />
           </div>
         </article>

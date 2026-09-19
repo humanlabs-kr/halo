@@ -1,7 +1,10 @@
 import { lazy, Suspense, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, Route, Routes } from 'react-router';
 import AppLayout from '@/components/AppLayout';
+import { useCrossPromoEnabled } from '@/hooks/useHaloMiniCampaign';
 import { getAuthAdapter } from '@/lib/auth/adapter';
+import { platformFeatures } from '@/lib/constants';
 import { useAuthStore } from '@/stores/auth';
 
 // Every page is its own chunk. The login screen is the only thing most first
@@ -25,10 +28,41 @@ function RouteFallback() {
   return <div className="min-h-screen bg-white" />;
 }
 
+/**
+ * Ask before a back gesture leaves the app.
+ *
+ * Only on chains whose host closes the mini app on back (see
+ * `PLATFORM_FEATURES.confirmOnBack`): there the gesture is one-way, so a
+ * mis-swipe on the home screen drops the user out with no way back in. The
+ * guard re-pushes the current entry when the user declines, which is why it
+ * only arms on the two entry paths — anywhere else, back is just navigation.
+ */
+function useConfirmOnBack(enabled: boolean) {
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const preventGoBack = () => {
+      const path = window.location.pathname;
+      if (path !== '/home' && path !== '/') return;
+      if (!window.confirm(t('L-IYP2erLe'))) {
+        window.history.pushState(null, '', path);
+      }
+    };
+
+    window.addEventListener('popstate', preventGoBack);
+    return () => window.removeEventListener('popstate', preventGoBack);
+  }, [enabled, t]);
+}
+
 export default function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const platform = useAuthStore((s) => s.platform);
   const checkSession = useAuthStore((s) => s.checkSession);
+  const crossPromoEnabled = useCrossPromoEnabled();
+
+  useConfirmOnBack(platformFeatures(platform).confirmOnBack);
 
   // Boot the platform SDK and re-validate the cookie session. The store
   // persists `isAuthenticated` so the app can render immediately; this
@@ -66,7 +100,11 @@ export default function App() {
             </Route>
             {/* Full-screen, outside the tab shell. */}
             <Route path="/camera-scan" element={<CameraScan />} />
-            <Route path="/event/halo-mini" element={<EventHaloMini />} />
+            {/* Absent, not hidden, where the chain does not run the
+                cross-promo: the wildcard below then sends the URL home. */}
+            {crossPromoEnabled && (
+              <Route path="/event/halo-mini" element={<EventHaloMini />} />
+            )}
             <Route path="*" element={<Navigate to="/home" replace />} />
           </>
         ) : (

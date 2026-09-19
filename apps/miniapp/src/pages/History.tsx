@@ -10,10 +10,8 @@ import type { ReceiptListItem } from "@/lib/api/receipt";
 import { usePointStat, useReceipts } from "@/lib/api/queries";
 import { usePointClaim, type PointClaim } from "@/hooks/usePointClaim";
 
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { useTranslation } from "react-i18next";
-dayjs.extend(relativeTime);
+import { useFormatters } from "@/lib/format";
 
 function History() {
   const listReceiptsQueryResult = useReceipts({ refetchInterval: 5000 });
@@ -50,7 +48,7 @@ function History() {
                 navigate("/point-logs");
               }}
               className="flex items-center justify-center size-10 rounded-full bg-linear-to-br from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 transition"
-              aria-label="View point logs"
+              aria-label={t("View point logs")}
             >
               <svg
                 viewBox="0 0 20 20"
@@ -128,6 +126,7 @@ function ReadyCard({
 }) {
   const hasClaimable = claimablePoints > 0;
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const showClaimAll = claim.mode === "all-at-once" && hasClaimable;
 
   return (
@@ -140,7 +139,7 @@ function ReadyCard({
         </p>
         <p className="text-xs text-[#8D8D8D]">
           {hasClaimable
-            ? `${claimablePoints}Pts ${t("L-wXo3ixjW")}`
+            ? `${t("{{points}}Pts", { points: fmt.number(claimablePoints) })} ${t("L-wXo3ixjW")}`
             : t("L-k4UKmPmt")}
         </p>
       </div>
@@ -181,7 +180,7 @@ function ResultsToolbar({ total }: { total: number }) {
       <button
         type="button"
         className="flex items-center gap-1 text-xs font-semibold text-black"
-        aria-label="Sort by date"
+        aria-label={t("Sort by date")}
       >
         <ArrowDownIcon className="h-4 w-4 text-black" />
         {t("L-mBxtTD3C")}
@@ -202,6 +201,7 @@ function ReceiptCell({
   onClaimed: (points: number | null) => void;
 }) {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   const statusMeta: Record<ReceiptStatus, { label: string }> = {
     pending: { label: t("L-bWVThcgt") },
     rejected: { label: t("L-uHNy0AiD") },
@@ -236,12 +236,12 @@ function ReceiptCell({
         <div>
           <p className="text-base font-semibold text-black">{meta.label}</p>
           <p className="text-xs text-[#6C6C6C]">
-            {dayjs(item.createdAt).fromNow()}
+            {fmt.relative(item.createdAt)}
           </p>
         </div>
         <img
           src="/fi_clock.svg"
-          alt="Clock"
+          alt={t("Clock")}
           className="h-6 w-6 text-[#585858]"
         />
       </article>
@@ -262,7 +262,7 @@ function ReceiptCell({
           <div>
             <p className="text-base font-semibold text-black">{meta.label}</p>
             <p className="text-xs text-[#6C6C6C]">
-              {dayjs(item.createdAt).fromNow()}
+              {fmt.relative(item.createdAt)}
             </p>
           </div>
         </div>
@@ -279,7 +279,7 @@ function ReceiptCell({
           </button>
         ) : (
           <p className="text-base font-semibold text-black">
-            {item.assignedPoint.toLocaleString()}Pt
+            {t("{{points}}Pt", { points: fmt.number(item.assignedPoint) })}
           </p>
         )}
       </article>
@@ -297,7 +297,7 @@ function ReceiptCell({
               <span className="text-xs font-normal text-[#6C6C6C]">
                 ({item.currency}{" "}
                 {item.totalAmount != null
-                  ? Number(item.totalAmount).toLocaleString("en-US", {
+                  ? fmt.number(Number(item.totalAmount), {
                       minimumFractionDigits: 0,
                       maximumFractionDigits: 2,
                     })
@@ -308,7 +308,7 @@ function ReceiptCell({
             <p className="text-xs text-[#6C6C6C]">
               <span>{meta.label}</span>
               <span> · </span>
-              <span>{dayjs(item.createdAt).fromNow()}</span>
+              <span>{fmt.relative(item.createdAt)}</span>
             </p>
           </div>
         </div>
@@ -325,7 +325,7 @@ function ReceiptCell({
           </button>
         ) : (
           <p className="text-base font-semibold text-black">
-            {item.assignedPoint || 0}Pt
+            {t("{{points}}Pt", { points: fmt.number(item.assignedPoint || 0) })}
           </p>
         )}
       </article>
@@ -385,7 +385,7 @@ function EmptyState() {
       <div className="mb-4 flex size-16 items-center justify-center rounded-full bg-[#F4F4F4]">
         <img
           src="/u_receipt.svg"
-          alt="Receipt"
+          alt={t("Receipt")}
           className="h-8 w-8 opacity-40"
         />
       </div>

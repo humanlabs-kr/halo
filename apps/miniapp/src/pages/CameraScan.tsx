@@ -166,7 +166,7 @@ function Header({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   return (
     <header className="flex items-center justify-between text-white">
-      <button type="button" onClick={onClose} aria-label="Close">
+      <button type="button" onClick={onClose} aria-label={t("Close")}>
         <img src="/u_multiply.svg" alt="Close" className="h-6 w-6" />
       </button>
       <div className="text-base font-semibold">{t("L-PQElQnFz")}</div>
@@ -176,6 +176,8 @@ function Header({ onClose }: { onClose: () => void }) {
 }
 
 function StepIndicator({ steps }: { steps: boolean[] }) {
+  const { t } = useTranslation();
+
   return (
     <div className="mt-4 flex justify-center gap-3">
       {steps.map((completed, index) => (
@@ -189,7 +191,7 @@ function StepIndicator({ steps }: { steps: boolean[] }) {
           ].join(" ")}
         >
           {completed ? (
-            <img src="/fi_check.svg" alt="Completed" className="h-3.5 w-3.5" />
+            <img src="/fi_check.svg" alt={t("Completed")} className="h-3.5 w-3.5" />
           ) : (
             ""
           )}
@@ -250,12 +252,14 @@ function CaptureButton({
   disabled: boolean;
   onCapture: () => void;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div className="pointer-events-none fixed bottom-10 left-1/2 z-20 -translate-x-1/2">
       <button
         type="button"
         className="pointer-events-auto flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-white/10 disabled:opacity-40"
-        aria-label="Capture"
+        aria-label={t("Capture")}
         disabled={disabled}
         onClick={() => {
           onCapture();
@@ -301,7 +305,7 @@ function StatusText({
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-white/30 border-t-white" />
         ) : (
           <>
-            <p>{errorMessage}</p>
+            <p>{t(errorMessage)}</p>
             <button
               type="button"
               className="pointer-events-auto mt-3 rounded-full px-4 py-1 font-semibold text-white transition hover:bg-white/10"
@@ -321,7 +325,7 @@ function InfoDrawer() {
   return (
     <Drawer.Root>
       <Drawer.Trigger asChild>
-        <button type="button" className="p-2" aria-label="Info">
+        <button type="button" className="p-2" aria-label={t("Info")}>
           <img src="/fi_info.svg" alt="Info" className="h-6 w-6" />
         </button>
       </Drawer.Trigger>

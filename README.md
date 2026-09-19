@@ -207,6 +207,11 @@ production one. The deploy job needs `CLOUDFLARE_API_TOKEN`,
 `CLOUDFLARE_ACCOUNT_ID` and `DATABASE_MIGRATION_URL`; the rest of the list is in
 the "Sync API secrets" step.
 
+The mini app is one Worker serving three custom domains, so a production deploy
+repoints all three chains at once. That and the rest of the operational detail —
+rollback, secret rotation, the sharp edges — is in
+[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+
 Forking this to run your own stack? Everything in `wrangler.jsonc` points at our
 Cloudflare resources. Create your own Hyperdrive config, R2 bucket, queues and
 domains, and replace the ids and routes.

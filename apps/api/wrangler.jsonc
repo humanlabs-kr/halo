@@ -23,7 +23,15 @@
   "vars": {
     "PROJECT_ENV": "local",
     "PREDEFINED_CORS_ORIGINS": "http://localhost:8000",
-    "CORS_ORIGIN_BASE_DOMAINS": ""
+    "CORS_ORIGIN_BASE_DOMAINS": "",
+    // Extra hostnames a SIWE login message may claim to come from, comma
+    // separated. The deployed hostnames are built into the verifier
+    // (src/lib/siwe.ts); this only exists for the per-developer Cloudflare
+    // tunnel hostname, which is configured in the dashboard. Overridden by
+    // .dev.vars locally, and empty in both deployed environments below —
+    // anything put there widens which origins can mint a session, which is
+    // why it is reviewable config and not a secret.
+    "LOCAL_ALLOWED_DOMAINS": ""
   },
 
   "hyperdrive": [
@@ -83,6 +91,7 @@
       // and never appear in this file — see README "Secrets".
       "vars": {
         "PROJECT_ENV": "staging",
+        "LOCAL_ALLOWED_DOMAINS": "",
         "API_URL": "https://api.receipto.seriesc.dev",
         "API_COOKIE_DOMAIN": "api.receipto.seriesc.dev",
         "PREDEFINED_CORS_ORIGINS": "",
@@ -136,6 +145,7 @@
       "placement": { "mode": "smart" },
       "vars": {
         "PROJECT_ENV": "production",
+        "LOCAL_ALLOWED_DOMAINS": "",
         "API_URL": "https://api.halo.humanlabs.world",
         "API_COOKIE_DOMAIN": "api.halo.humanlabs.world",
         "PREDEFINED_CORS_ORIGINS": "",

@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import {
+  FALLBACK_PLATFORM,
+  ONBOARDING_REWARD_COPY,
+  REWARD_CURRENCY,
+} from "@/lib/constants";
 import { setOnboardingCompleted } from "@/lib/onboarding-storage";
+import { useAuthStore } from "@/stores/auth";
 import { useTranslation } from "react-i18next";
 
 type HistoryCard = {
@@ -32,6 +38,11 @@ type OnboardingProps = {
 function Onboarding({ onClose }: OnboardingProps = {}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  // The reward slide names a currency, and the three chains do not pay the
+  // same one. Signed-out visitors reach this deck too, hence the fallback.
+  const platform = useAuthStore((s) => s.platform) ?? FALLBACK_PLATFORM;
+  const currency = REWARD_CURRENCY[platform];
+  const rewardCopy = ONBOARDING_REWARD_COPY[platform];
   const [currentStep, setCurrentStep] = useState(0);
   const [progressCycle, setProgressCycle] = useState(0);
   const timerRef = useRef<number | null>(null);
@@ -57,47 +68,47 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
         {
           kind: "history",
           merchant: "Carrefour",
-          detail: "Claimable · Now",
+          detail: t("Claimable · Now"),
           points: 25,
           score: 90,
         },
         {
           kind: "history",
           merchant: "Target",
-          detail: "Claimable · 2 hrs ago",
+          detail: t("Claimable · 2 hrs ago"),
           points: 10,
           score: 72,
         },
         {
           kind: "history",
           merchant: "Joe's BBQ",
-          detail: "Claimable · Yesterday",
+          detail: t("Claimable · Yesterday"),
           points: 8,
           score: 64,
         },
       ],
     },
     {
-      title: t("L-ooS1yAuv"),
-      subtitle: t("L-7QsZgPLu"),
+      title: t(rewardCopy.titleKey),
+      subtitle: t(rewardCopy.subtitleKey),
       heroImage: "/onboarding/step-3.webp",
       cards: [
         {
           kind: "reward",
-          amountLabel: "10 USDT",
-          pointsLabel: "Use 15,000 pts",
+          amountLabel: `10 ${currency}`,
+          pointsLabel: t("Use {{count}} pts", { count: "15,000" }),
           status: "claimable",
         },
         {
           kind: "reward",
-          amountLabel: "4 USDT",
-          pointsLabel: "Use 5,600 pts",
+          amountLabel: `4 ${currency}`,
+          pointsLabel: t("Use {{count}} pts", { count: "5,600" }),
           status: "closed",
         },
         {
           kind: "reward",
-          amountLabel: "2 USDT",
-          pointsLabel: "Use 3,200 pts",
+          amountLabel: `2 ${currency}`,
+          pointsLabel: t("Use {{count}} pts", { count: "3,200" }),
           status: "closed",
         },
       ],
@@ -281,7 +292,7 @@ function Onboarding({ onClose }: OnboardingProps = {}) {
         <div className="relative w-full min-h-[320px]">
           <img
             src={step.heroImage}
-            alt={`${step.title} preview`}
+            alt={t("{{title}} preview", { title: step.title })}
             className="w-full rounded-[32px]"
           />
           {currentStep === 0 && flashReady && (
@@ -358,6 +369,8 @@ function HistoryPreviewCard({
   card: HistoryCard;
   delay: number;
 }) {
+  const { t } = useTranslation();
+
   return (
     <div
       className="flex items-center justify-between rounded-[22px] bg-[#F7F9FF] px-4 py-3 shadow-inner animate-slide-up"
@@ -373,7 +386,9 @@ function HistoryPreviewCard({
         </div>
       </div>
       <div className="text-right">
-        <p className="text-sm font-semibold text-black">{card.points} Pt</p>
+        <p className="text-sm font-semibold text-black">
+          {t("{{points}} Pt", { points: card.points })}
+        </p>
       </div>
     </div>
   );

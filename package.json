@@ -18,12 +18,12 @@
     "db:drop": "pnpm --filter @halo/database db:drop"
   },
   "devDependencies": {
-    "cloudflared": "^0.7.1",
-    "concurrently": "^9.2.1",
-    "dotenv": "^16.4.0",
+    "cloudflared": "^0.7.3",
+    "concurrently": "^9.2.4",
+    "dotenv": "^16.6.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
-    "turbo": "^2.4.0"
+    "turbo": "^2.10.13"
   },
   "lint-staged": {
     "apps/api/**/*.{ts,tsx,js,jsx}": "pnpm --filter @halo/api exec eslint --fix",
@@ -31,5 +31,10 @@
     "packages/contracts/**/*.{ts,tsx}": "pnpm --filter @halo/contracts exec eslint --fix",
     "packages/database/**/*.{ts,tsx}": "pnpm --filter @halo/database exec eslint --fix",
     "packages/onchain/**/*.{ts,tsx}": "pnpm --filter @halo/onchain exec eslint --fix"
+  },
+  "pnpm": {
+    "overrides": {
+      "@reown/appkit-wallet>zod": "3.25.76"
+    }
   }
 }

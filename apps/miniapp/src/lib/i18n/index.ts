@@ -9,43 +9,24 @@ import en from './locales/en.json';
  * file added to `locales/` without being listed here fails `pnpm test`.
  */
 export const SUPPORTED_LANGS = [
-  'ar',
-  'bn',
-  'de-AT',
-  'de-CH',
   'de-DE',
   'en',
   'en-GB',
   'es-419',
   'es-ES',
-  'fa',
-  'fr-CA',
   'fr-FR',
   'hi',
   'id',
-  'it',
   'ja',
-  'kn',
   'ko',
-  'mr',
-  'ms-ID',
   'ms-MY',
-  'nl-BE',
   'nl-NL',
-  'pa-Arab',
-  'pa-Guru',
   'pl',
   'pt-BR',
   'pt-PT',
-  'ru',
   'sw',
-  'ta',
-  'te',
   'th',
   'tl',
-  'tr',
-  'uk',
-  'ur',
   'vi',
   'zh-CN',
   'zh-TW',
@@ -66,12 +47,44 @@ const BASE_LANGUAGE_FALLBACKS = {
   fr: ['fr-FR'],
   ms: ['ms-MY'],
   nl: ['nl-NL'],
-  pa: ['pa-Guru'],
   pt: ['pt-BR'],
   zh: ['zh-CN'],
   'zh-Hant': ['zh-TW'],
   default: ['en'],
 } as const;
+
+/**
+ * Names for the language picker.
+ *
+ * Endonyms, not English names: someone who cannot read the current UI language
+ * is exactly the person using this list, so "한국어" has to be findable without
+ * reading "Korean". Written out rather than derived from `Intl.DisplayNames`
+ * so the picker cannot change wording between devices or come back blank on a
+ * webview with a trimmed ICU build.
+ */
+export const LANGUAGE_NAMES: Record<LangCode, string> = {
+  'de-DE': 'Deutsch',
+  en: 'English',
+  'en-GB': 'English (UK)',
+  'es-419': 'Español (Latinoamérica)',
+  'es-ES': 'Español (España)',
+  'fr-FR': 'Français',
+  hi: 'हिन्दी',
+  id: 'Bahasa Indonesia',
+  ja: '日本語',
+  ko: '한국어',
+  'ms-MY': 'Bahasa Melayu',
+  'nl-NL': 'Nederlands',
+  pl: 'Polski',
+  'pt-BR': 'Português (Brasil)',
+  'pt-PT': 'Português (Portugal)',
+  sw: 'Kiswahili',
+  th: 'ไทย',
+  tl: 'Filipino',
+  vi: 'Tiếng Việt',
+  'zh-CN': '简体中文',
+  'zh-TW': '繁體中文',
+};
 
 /**
  * Locale loaders, one dynamic chunk per language.
@@ -115,6 +128,17 @@ void i18n
     fallbackLng: BASE_LANGUAGE_FALLBACKS,
     supportedLngs: [...SUPPORTED_LANGS],
     nonExplicitSupportedLngs: true,
+    // Locale files are flat maps of string to string — `check-locales` fails
+    // the build on anything else — so i18next's structural separators have no
+    // job here, and leaving them on breaks real keys. Source-text keys are
+    // keyed by their English copy, and "Free download on iOS & Android."
+    // would otherwise be read as a path into a nested object that does not
+    // exist: the lookup misses, i18next returns the key, and the string
+    // renders in English in every language while looking perfectly fine.
+    // A key containing ":" ("Mine:") is worse — it parses as a namespace and
+    // renders as nothing at all.
+    keySeparator: false,
+    nsSeparator: false,
     interpolation: {
       escapeValue: false, // React escapes on render.
     },

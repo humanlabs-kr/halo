@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import confetti from "canvas-confetti";
 import { useTranslation } from "react-i18next";
+import { useFormatters } from "@/lib/format";
 
 type ClaimSuccessModalProps = {
   points: number;
@@ -9,6 +10,7 @@ type ClaimSuccessModalProps = {
 
 function ClaimSuccessModal({ points, onClose }: ClaimSuccessModalProps) {
   const { t } = useTranslation();
+  const fmt = useFormatters();
   useEffect(() => {
     const timeout = setTimeout(() => {
       confetti({ particleCount: 160, spread: 80, origin: { y: 0.4 } });
@@ -30,7 +32,7 @@ function ClaimSuccessModal({ points, onClose }: ClaimSuccessModalProps) {
         onClick={(event) => event.stopPropagation()}
       >
         <div className="relative mx-auto mb-8 mt-12 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-success text-white">
-          <img src="/fi_check.svg" alt="Completed" className="z-10 h-9 w-9" />
+          <img src="/fi_check.svg" alt={t("Completed")} className="z-10 h-9 w-9" />
           <img
             src="/v3.png"
             alt="accent curve"
@@ -49,7 +51,9 @@ function ClaimSuccessModal({ points, onClose }: ClaimSuccessModalProps) {
         </div>
         <div className="relative z-20 space-y-2">
           <h2 className="text-2xl font-semibold">
-            {points.toLocaleString()} Points Claimed.
+            {t("{{points}} Points Claimed.", {
+              points: fmt.number(points),
+            })}
           </h2>
           <p className="text-sm text-slate-500">
             {t("L-vU6og8Va")} <br />

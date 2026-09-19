@@ -43,17 +43,10 @@ export interface ReceiptList {
   list: ReceiptListItem[];
 }
 
-/**
- * One stored scan. The `synapse*` fields track the archival upload, which runs
- * after analysis and may never have started — hence all four being nullable.
- */
+/** One stored scan. */
 export interface ReceiptImage {
   id: string;
   numOrder: number;
-  synapseUploadStartedAt: string | null;
-  synapseUploadCompletedAt: string | null;
-  synapsePieceCid: string | null;
-  synapseUploadError: string | null;
   createdAt: string;
 }
 

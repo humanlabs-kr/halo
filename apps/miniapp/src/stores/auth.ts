@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
-import type { Platform } from '@halo/contracts';
+import { statementFor, type Platform } from '@halo/contracts';
 import { authApi, type SessionStatus } from '@/lib/api/auth';
-import { AuthError, getAuthAdapter } from '@/lib/auth/adapter';
+import { AuthError, getAuthAdapter, submitSignIn } from '@/lib/auth/adapter';
 import { detectPlatform } from '@/lib/platform';
 
 /**
@@ -43,6 +43,13 @@ const initialState: AuthState = {
 
 /** Module-level guard: a second tap must not open a second wallet prompt. */
 let signInInFlight = false;
+
+/**
+ * How long sign-out will wait for the wallet to let go before carrying on.
+ * Generous for a teardown, short enough that a dead relay socket cannot hold
+ * the user on a spinner — the server session is revoked either way.
+ */
+const WALLET_DISCONNECT_TIMEOUT_MS = 5_000;
 
 export const useAuthStore = create<AuthStore>()(
   subscribeWithSelector(
@@ -90,7 +97,19 @@ export const useAuthStore = create<AuthStore>()(
               throw new AuthError('rejected', 'Could not start sign-in. Please try again.');
             });
 
-            await adapter.signIn(challenge);
+            // Built here rather than in each adapter so all three chains sign
+            // the same shape. `statement` comes from `@halo/contracts` because
+            // the API compares it against its own copy character for
+            // character, and `domain` is what the API checks its allow-list
+            // against — a message claiming any other host is refused.
+            const result = await adapter.signIn({
+              nonce: challenge.nonce,
+              statement: statementFor(platform),
+              domain: window.location.host,
+              uri: window.location.origin,
+            });
+
+            await submitSignIn(platform, challenge, result);
             await get().checkSession();
             return true;
           } catch (error) {
@@ -107,6 +126,40 @@ export const useAuthStore = create<AuthStore>()(
 
         signOut: async () => {
           set({ isLoading: true });
+
+          // ── Wallet first, server second ────────────────────────────────────
+          // Signing out has two halves: release the wallet session, then revoke
+          // ours. The wallet goes first for two reasons.
+          //
+          // It is the half that actually fails. Revoking is one call to our own
+          // API; the wallet teardown is an SDK talking to a wallet app over a
+          // relay. And its failure is the one that matters: a wallet still
+          // connected means the next sign-in is silent and the user is back in
+          // the account they were trying to leave, which is the whole bug this
+          // exists to fix. A cookie that outlives the screen merely expires.
+          //
+          // It also needs the app intact. Clearing the store below flips
+          // `isAuthenticated` and sends `App.tsx` to the login screen — so a
+          // teardown started after that point races a route change that can
+          // abandon it mid-flight. Doing it first means sign-out finishes only
+          // once both halves are genuinely done.
+          const platform = get().platform;
+          if (platform) {
+            const disconnect = getAuthAdapter(platform).disconnect;
+            if (disconnect) {
+              // Never allowed to abort the sign-out. A rejection is swallowed
+              // (the SDK may throw simply because nothing was connected), and
+              // the race guards against the other failure mode — a relay call
+              // that never settles, which would otherwise strand the user in
+              // `isLoading` with no way out. Worst case the wallet is still
+              // tearing down as we go; it stays a wallet problem either way.
+              await Promise.race([
+                disconnect().catch(() => {}),
+                new Promise((resolve) => setTimeout(resolve, WALLET_DISCONNECT_TIMEOUT_MS)),
+              ]);
+            }
+          }
+
           // A failed revoke still clears the client: the user asked to be signed
           // out, and leaving them "signed in" because the network blipped is worse
           // than a cookie that outlives the screen and expires on its own.
