@@ -108,7 +108,7 @@ export const adminTestingRoutes = new OpenAPIHono<AppEnv>({ defaultHook: adminVa
 
     try {
       const bytes = new Uint8Array(await file.arrayBuffer());
-      const receipt = await ReceiptProcessor.process(c.env.OPENAI_API_KEY, [bytes], country);
+      const receipt = await ReceiptProcessor.process(c.env.OPENROUTER_API_KEY, [bytes], country);
 
       return c.json({ data: receipt }, 200);
     } catch (error) {

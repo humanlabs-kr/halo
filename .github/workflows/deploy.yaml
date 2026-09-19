@@ -159,7 +159,7 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SESSION_HMAC_SECRET: ${{ secrets.SESSION_HMAC_SECRET }}
           ADMIN_API_TOKEN: ${{ secrets.ADMIN_API_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SERVER_SIGNER_PRIVATE_KEY: ${{ secrets.SERVER_SIGNER_PRIVATE_KEY }}
           TURNSTILE_SECRET_KEY: ${{ secrets.TURNSTILE_SECRET_KEY }}
           MAILEROO_API_KEY: ${{ secrets.MAILEROO_API_KEY }}
@@ -171,7 +171,7 @@ jobs:
           DROP_ID: ${{ secrets.DROP_ID }}
         run: |
           set -euo pipefail
-          for key in JWT_SECRET SESSION_HMAC_SECRET ADMIN_API_TOKEN OPENAI_API_KEY \
+          for key in JWT_SECRET SESSION_HMAC_SECRET ADMIN_API_TOKEN OPENROUTER_API_KEY \
                      SERVER_SIGNER_PRIVATE_KEY TURNSTILE_SECRET_KEY MAILEROO_API_KEY \
                      CELO_RPC_URL WORLDCHAIN_RPC_URL KAIA_RPC_URL DROP_API_URL DROP_ID; do
             value="${!key-}"

@@ -90,7 +90,7 @@ async function analyseReceipt(db: Database, env: Env, params: Params): Promise<v
     receiptImageRecords.map((image) => R2.downloadReceiptImage(env.RECEIPT_BUCKET, image.id)),
   );
 
-  const analysis = await tryCatch(ReceiptProcessor.process(env.OPENAI_API_KEY, images, params.country));
+  const analysis = await tryCatch(ReceiptProcessor.process(env.OPENROUTER_API_KEY, images, params.country));
 
   // A failed analysis is a rejected receipt, not a lost one: the reason is
   // stored so the user sees why and support can tell a model outage from a bad

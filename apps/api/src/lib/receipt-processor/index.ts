@@ -15,10 +15,21 @@ import { ReceiptSchema } from './zod';
  */
 
 /**
- * Vision model. Needs image input and structured outputs; the cheaper tier is
- * enough because the prompt does the strict work, not the model size.
+ * Receipt analysis goes through OpenRouter, not the OpenAI API.
+ *
+ * This is not a preference, it is the deployed configuration: production has
+ * scored every receipt with `qwen/qwen3-vl-32b-instruct` via OpenRouter since
+ * launch. The model is load-bearing in a way that is easy to miss — the point
+ * award is `floor(BASE_POINT_PER_RECEIPT * qualityRate / 100)`, so whatever
+ * `qualityRate` the model returns *is* the user's payout. Swapping the model
+ * silently re-prices every scan and shifts the accept/reject boundary, which
+ * makes it a product decision rather than an implementation detail.
+ *
+ * The prompt below was tuned against this model. Change one and you have to
+ * re-validate the other against real receipts.
  */
-const VISION_MODEL = 'gpt-4.1-mini';
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const VISION_MODEL = 'qwen/qwen3-vl-32b-instruct';
 
 /** Zero temperature: the same photo must score the same way twice. */
 const TEMPERATURE = 0;
@@ -27,7 +38,7 @@ export const ReceiptProcessor = {
   normalizeImage: normalizeReceiptImage,
 
   async process(apiKey: string, imageBytesArray: Uint8Array[], country: string) {
-    const openai = new OpenAI({ apiKey });
+    const openai = new OpenAI({ apiKey, baseURL: OPENROUTER_BASE_URL });
     const base64Images = imageBytesArray.map(bytesToBase64);
 
     try {

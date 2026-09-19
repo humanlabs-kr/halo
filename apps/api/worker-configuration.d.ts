@@ -12,7 +12,7 @@ declare namespace Cloudflare {
 		JWT_SECRET: string;
 		SESSION_HMAC_SECRET: string;
 		ADMIN_API_TOKEN: string;
-		OPENAI_API_KEY: string;
+		OPENROUTER_API_KEY: string;
 		SERVER_SIGNER_PRIVATE_KEY: string;
 		TURNSTILE_SECRET_KEY: string;
 		API_COOKIE_DOMAIN: string;
@@ -37,7 +37,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "PROJECT_ENV" | "PREDEFINED_CORS_ORIGINS" | "CORS_ORIGIN_BASE_DOMAINS" | "JWT_SECRET" | "SESSION_HMAC_SECRET" | "ADMIN_API_TOKEN" | "OPENAI_API_KEY" | "SERVER_SIGNER_PRIVATE_KEY" | "TURNSTILE_SECRET_KEY" | "API_COOKIE_DOMAIN" | "LOCAL_ALLOWED_DOMAINS" | "CELO_RPC_URL" | "WORLDCHAIN_RPC_URL" | "KAIA_RPC_URL" | "POINT_CLAIM_CONTRACT_CELO" | "MAILEROO_API_KEY" | "EMAIL_FROM_ADDRESS" | "API_URL" | "WORLD_APP_ID" | "DROP_API_URL" | "DROP_ID">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "PROJECT_ENV" | "PREDEFINED_CORS_ORIGINS" | "CORS_ORIGIN_BASE_DOMAINS" | "JWT_SECRET" | "SESSION_HMAC_SECRET" | "ADMIN_API_TOKEN" | "OPENROUTER_API_KEY" | "SERVER_SIGNER_PRIVATE_KEY" | "TURNSTILE_SECRET_KEY" | "API_COOKIE_DOMAIN" | "LOCAL_ALLOWED_DOMAINS" | "CELO_RPC_URL" | "WORLDCHAIN_RPC_URL" | "KAIA_RPC_URL" | "POINT_CLAIM_CONTRACT_CELO" | "MAILEROO_API_KEY" | "EMAIL_FROM_ADDRESS" | "API_URL" | "WORLD_APP_ID" | "DROP_API_URL" | "DROP_ID">> {}
 }
 
 // Begin runtime types
