@@ -1,4 +1,5 @@
 import { relations } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { decimal, index, integer, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 import { schema } from './schema';
 import { users } from './users';
@@ -76,6 +77,28 @@ export const receipts = schema.table(
       table.analysisCompletedAt.desc().nullsLast(),
       table.id,
     ),
+    // The sweeper asks "what is still pending?" every fifteen minutes, and
+    // status had no index at all — that question was a sequential scan of every
+    // receipt ever uploaded. Partial because pending is a state a receipt
+    // passes through in seconds: the index stays a few pages wide no matter how
+    // large the table grows, and it only has to be maintained for the handful
+    // of rows currently in flight.
+    index('receipts_pending_created_at_idx')
+      .on(table.createdAt)
+      .where(sql`${table.status} = 'pending'`),
+    // Covers the claimable-balance query in `routes/client/point.ts`, which
+    // sums `assigned_point` for one wallet across two statuses.
+    //
+    // This index was created by hand on production and existed for months
+    // without ever being declared here — `db:push` against that database would
+    // have dropped it. It is written down now so the schema and the database
+    // agree.
+    //
+    // Production additionally carries `INCLUDE (assigned_point)`, which makes
+    // the sum index-only. Drizzle 0.43 cannot express an INCLUDE payload, so
+    // the migration SQL beside this file spells it out and is the more precise
+    // of the two definitions.
+    index('receipts_user_status_point_idx').on(table.userAddress, table.status),
   ],
 );
 
