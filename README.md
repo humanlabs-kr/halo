@@ -7,22 +7,32 @@ user photographs a receipt inside their wallet app, a vision model extracts and
 scores it, and verified receipts become points that can be claimed as tokens on
 Celo, World Chain, or Kaia.
 
-This is the live codebase, opened up. It is what runs at
-`api.halo.humanlabs.world` and the three mini app domains beside it — not a
-demo, not a trimmed copy. Production configuration is here; only secrets are
-not, and the commit history starts fresh at this point as the hackathon
-baseline.
+This is the running system, not a demo or a trimmed copy. What is in this
+repository is what serves `api.halo.humanlabs.world` and the three mini app
+domains beside it, to real users, today. Production configuration is committed;
+only secrets are not.
 
-Two consequences worth knowing before you change anything:
+Halo first shipped at ETHGlobal Buenos Aires 2025. That submission is preserved
+unchanged at [humanlabs-kr/halo-ethglobal-2025](https://github.com/humanlabs-kr/halo-ethglobal-2025);
+this repository is where it went afterwards.
 
-- **The Solidity in `packages/onchain` is already deployed** behind a UUPS
-  proxy holding real balances. Its inheritance, storage layout and EIP-712
-  domain are fixed by what is on chain.
+## Three things production has already decided
+
+Changing any of these is a migration, not an edit.
+
+- **The Solidity in `packages/onchain` is deployed** behind a UUPS proxy holding
+  real balances. Its inheritance, storage layout and EIP-712 domain are fixed by
+  what is on chain. `CeloPointClaimUpgradableV2` is live on both environments.
 - **The database in `packages/database` has data in it.** Its Postgres schema is
   named `receipto` — an old product name that cannot be renamed — and its 17
   migrations are already applied.
+- **The vision model is load-bearing.** Receipt analysis runs
+  `qwen/qwen3-vl-32b-instruct` through OpenRouter, and the award is
+  `floor(BASE_POINT_PER_RECEIPT × qualityRate / 100)`. Whatever score that model
+  returns *is* the user's payout, and the 30-point floor is the accept/reject
+  boundary. Swapping the model re-prices every scan.
 
-Both are called out where it matters in the code. `AGENTS.md` has the rest.
+Each is called out where it matters in the code. `AGENTS.md` has the conventions.
 
 ---
 
@@ -30,7 +40,7 @@ Both are called out where it matters in the code. `AGENTS.md` has the rest.
 
 | Piece | Path | What it does |
 |---|---|---|
-| **API** | `apps/api` | Hono on Cloudflare Workers. Auth, receipt intake, AI analysis queue, points, raffle, admin. |
+| **API** | `apps/api` | Hono on Cloudflare Workers. Auth, receipt intake, analysis queue, points, raffle, admin. |
 | **Mini app** | `apps/miniapp` | React + Vite SPA. One app, three wallet platforms, selected at runtime. |
 | **Shared contracts** | `packages/contracts` | Zod schemas, chain constants and ABIs shared by API and frontend. |
 | **Database** | `packages/database` | Drizzle ORM schema and migrations (PostgreSQL via Hyperdrive). |
@@ -59,13 +69,16 @@ Both are called out where it matters in the code. `AGENTS.md` has the rest.
      │ claimPoints(amount, claimId, deadline, signature)
      ▼
 ┌──────────────────────┐
-│ PointClaim contract  │  Celo · World Chain · Kaia
+│ PointClaim contract  │  Celo
 └──────────────────────┘
 ```
 
 The server never sends tokens. It signs a claim that the user redeems from their
 own wallet, so a compromised API cannot drain the reward pool — it can only
 authorise claims, which are capped per receipt and single-use by `claimId`.
+
+Only Celo settles onchain. World and Kaia credit points off-chain; World gates
+the claim behind a World ID proof instead.
 
 ### One app, three platforms
 
@@ -76,17 +89,42 @@ lives behind an adapter:
 ```
 lib/auth/adapter.ts  →  world.ts   (World App MiniKit)
                         celo.ts    (MiniPay injected provider)
-                        kaia.ts    (Kaia wallet SDK)
+                        kaia.ts    (Kaia DappPortal SDK)
 ```
 
 Adding a fourth chain means adding one adapter file and one entry to the switch —
 not copying the app.
 
+The map in `packages/contracts/src/platform.ts` resolves the *first label* of
+the hostname — `miniapp.` is World, because World shipped first and took the
+bare subdomain before the platform names existed. Those labels are baked into
+installed mini apps and cannot be renamed. An unknown label returns `null`
+rather than a guess, since a mini app that assumes the wrong platform
+authenticates against the wrong chain and fails in ways nobody traces back to
+DNS. Renaming a route in `apps/miniapp/wrangler.jsonc` without updating that map
+is exactly that failure.
+
+### Languages
+
+21 locales in `apps/miniapp/src/lib/i18n/locales/`, chosen from production
+country data rather than ambition. Two kinds of key live there: opaque ids
+(`L-fZMUbLsR`), which render as themselves when missing and so are mandatory
+everywhere, and source-text keys, whose key *is* the English copy and which fall
+back cleanly.
+
+`pnpm --filter @halo/miniapp test` runs `check-locales`, which is stricter than
+it looks: it compares every locale to the reference, compares the *source* to
+the reference to catch a `t()` call for a key nobody declared, and boots a real
+i18next to prove each shipped locale resolves to itself. That last check exists
+because a single i18next option once made ten region-tagged locales silently
+fall back to English with every file complete and every test green.
+
 ---
 
 ## Quick start
 
-**Requirements:** Node.js 22+, pnpm 9.15+, a PostgreSQL database.
+**Requirements:** Node.js 22, pnpm 9.15.4 (pinned in `packageManager`), a
+PostgreSQL database.
 
 ```bash
 pnpm install
@@ -132,10 +170,12 @@ is therefore already public the moment the app ships; committing them is what
 makes a clean checkout produce the same build. **If a value must stay private it
 cannot be a `VITE_` variable** — it belongs behind the API.
 
-> The RPC entries in those files are intentionally blank. Our provider URLs
-> carry an API key in the path, and a key in a public repo is on a scraper's
-> list within the hour. Unset falls back to public endpoints; inject a keyed URL
-> from CI if you need the throughput.
+> The RPC entries in those files are intentionally blank, because a provider URL
+> carries its key in the path. Unset is a supported state: viem falls back to
+> each chain's default endpoint. To ship a keyed one, set the matching
+> `VITE_*_RPC_URL` GitHub Environment secret and the deploy step compiles it in.
+> Keep those separate from the API's `*_RPC_URL` secrets — anything named
+> `VITE_` is downloaded by every user.
 
 **3. Secrets — never in this repo, in any form.** Not even encrypted: a
 committed ciphertext is an offline cracking target that never expires. They are
@@ -156,7 +196,11 @@ A few keys deserve a note:
 - `ADMIN_API_TOKEN` — guards every `/v1/admin/*` route. Use 32+ random bytes.
   It is compared in constant time, but a guessable value defeats that.
 - `SERVER_SIGNER_PRIVATE_KEY` — signs claim authorisations. It holds no funds and
-  cannot move tokens; it only attests that a receipt earned N points.
+  cannot move tokens; it only attests that a receipt earned N points. The
+  contract's `serverSigner` must match it.
+- `OPENROUTER_API_KEY` — every receipt is scored through it. No credit, no
+  scoring: the queue marks the receipt rejected and moves on.
+- `JWT_SECRET` — changing it signs out every logged-in user at once.
 - `DEPLOYER_PRIVATE_KEY` — used only by `packages/onchain` at deploy time. Keep it
   out of the Worker environment.
 
@@ -186,6 +230,22 @@ pnpm --filter @halo/miniapp build
 pnpm --filter @halo/onchain test
 ```
 
+### Tests
+
+```
+apps/api             70   SIWE verification, session issuance, token shape
+packages/contracts   15   hostname → platform resolution
+packages/onchain     29   Foundry, including a V1→V2 upgrade that must preserve balances
+apps/miniapp          –   check-locales (see "Languages")
+```
+
+The API suite is about security properties, not implementation details: every
+signature is a real EIP-191 signature from a real key, and the only thing
+substituted is the JSON-RPC node. It exists because the login path has broken
+twice in ways typecheck and build were both happy with.
+
+`packages/onchain` needs Foundry (`forge`) on PATH; CI installs it.
+
 ---
 
 ## Deployment
@@ -203,18 +263,17 @@ the schema.
 
 Secrets are read from **GitHub Environment** secrets (`staging` and
 `production`), so the same workflow file cannot push a staging value over a
-production one. The deploy job needs `CLOUDFLARE_API_TOKEN`,
-`CLOUDFLARE_ACCOUNT_ID` and `DATABASE_MIGRATION_URL`; the rest of the list is in
-the "Sync API secrets" step.
+production one. Both environments require a manual approval before their jobs
+run.
 
 The mini app is one Worker serving three custom domains, so a production deploy
-repoints all three chains at once. That and the rest of the operational detail —
-rollback, secret rotation, the sharp edges — is in
-[docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md).
+repoints all three chains at once. That, the rollback path, secret rotation and
+the sharp edges are in [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) — read it
+before your first production release.
 
-Forking this to run your own stack? Everything in `wrangler.jsonc` points at our
-Cloudflare resources. Create your own Hyperdrive config, R2 bucket, queues and
-domains, and replace the ids and routes.
+Forking this to run your own stack? The two `wrangler.jsonc` files point at our
+Cloudflare resources by id. Create your own Hyperdrive config, R2 bucket, queues
+and domains, then replace those ids and routes.
 
 ---
 
@@ -227,7 +286,8 @@ Good places to start:
 - **New reward mechanic** — the raffle in `apps/api/src/routes/client/raffle.ts` is
   self-contained and a reasonable template.
 - **Better extraction** — receipt analysis lives in `apps/api/src/lib/receipt-processor/`.
-  The prompt and the scoring rule are in one place.
+  The prompt and the scoring rule are in one place. Re-validate against real
+  receipts before changing either; see the note at the top of this file.
 
 Conventions that keep this codebase navigable are written down in
 [AGENTS.md](./AGENTS.md) — worth five minutes before your first pull request.
