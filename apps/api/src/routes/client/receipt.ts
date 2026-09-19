@@ -18,6 +18,7 @@ import KSUID from 'ksuid';
 import { R2 } from '../../lib/r2';
 import { ReceiptProcessor } from '../../lib/receipt-processor';
 import { userAuth } from '../../middleware/auth';
+import { tryCatch } from '../../lib/try-catch';
 import { ReceiptAnalysisQueue } from '../../queues';
 import type { AppEnv } from '../../types';
 
@@ -158,7 +159,18 @@ app.openapi(uploadReceiptRoute, async (c) => {
     );
   }
 
-  const { receiptId, receiptImageIds } = await db.transaction(async (tx) => {
+  // The image lands in R2 *before* any row exists. The previous order — insert
+  // the rows, then upload — left a `pending` receipt behind every time the
+  // upload failed: a row whose image the consumer could never read, so it was
+  // never analysed and never settled. An orphaned R2 object costs storage; an
+  // orphaned row costs the user a receipt that says "analysing" forever.
+  const receiptImageId = crypto.randomUUID();
+  const arrayBuffer = await file.arrayBuffer();
+  const normalizedImage = ReceiptProcessor.normalizeImage(new Uint8Array(arrayBuffer));
+
+  await R2.saveReceiptImage(c.env.RECEIPT_BUCKET, normalizedImage, receiptImageId);
+
+  const receiptId = await db.transaction(async (tx) => {
     const weeklyScanCount = await tx
       .select({ count: sql<number>`count(*)`.as('count') })
       .from(receipts)
@@ -180,29 +192,25 @@ app.openapi(uploadReceiptRoute, async (c) => {
     });
 
     // TODO create many receipt image rows once a receipt can carry multiple images
-    const newReceiptImageIds = [crypto.randomUUID()];
+    await tx.insert(receiptImages).values([
+      { id: receiptImageId, receiptId: newReceiptId, numOrder: 0 },
+    ]);
 
-    await tx.insert(receiptImages).values(
-      newReceiptImageIds.map((id, index) => ({
-        id,
-        receiptId: newReceiptId,
-        numOrder: index,
-      })),
-    );
-
-    return { receiptId: newReceiptId, receiptImageIds: newReceiptImageIds };
+    return newReceiptId;
   });
 
-  const receiptImageId = receiptImageIds[0]!;
+  // Enqueued with `await` rather than `waitUntil`. A send that fails inside
+  // `waitUntil` is invisible: nothing logs it, nothing retries it, and the
+  // receipt stays `pending` for good. The upload itself still succeeds — row
+  // and image are both durable — and `ReceiptSweeper` re-queues whatever never
+  // reached the consumer.
+  const enqueued = await tryCatch(
+    ReceiptAnalysisQueue.send(c.env.RECEIPT_ANALYSIS_QUEUE, { receiptId, country }),
+  );
 
-  // The analysis queue reads the image back out of R2, so the upload has to land before the
-  // queue message goes out.
-  const arrayBuffer = await file.arrayBuffer();
-  const normalizedImage = ReceiptProcessor.normalizeImage(new Uint8Array(arrayBuffer));
-
-  await R2.saveReceiptImage(c.env.RECEIPT_BUCKET, normalizedImage, receiptImageId);
-
-  c.executionCtx.waitUntil(ReceiptAnalysisQueue.send(c.env.RECEIPT_ANALYSIS_QUEUE, { receiptId, country }));
+  if (enqueued.error) {
+    console.error(`Failed to enqueue receipt analysis for ${receiptId}:`, enqueued.error);
+  }
 
   return c.json({ data: { result: 'success' as const } }, 200);
 });
