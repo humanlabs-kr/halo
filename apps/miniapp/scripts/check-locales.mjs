@@ -257,6 +257,82 @@ if (!listMatch) {
   }
 }
 
+// --- i18next actually resolves every locale we ship ---------------------------
+
+/**
+ * The check that only a rendered page used to be able to make.
+ *
+ * Every check above reads files. None of them runs i18next, and i18next is
+ * where a locale can be complete on disk and still never load. It happened:
+ * `nonExplicitSupportedLngs: true` makes `isSupportedCode` test the *base*
+ * language, so `de-DE` was looked up as `de`, which is deliberately not in
+ * `supportedLngs` — eleven of twenty-one locales silently fell back to
+ * English, with green tests and no console error.
+ *
+ * So this boots the real i18next with the real options parsed out of
+ * `index.ts` and asserts each shipped code resolves to itself. It is a
+ * behavioural test, not a lint: change the options in a way that breaks
+ * resolution and this fails, whatever the mechanism.
+ */
+const i18nSource = readFileSync(i18nIndex, 'utf8');
+
+function parseOption(name) {
+  const m = i18nSource.match(new RegExp(`${name}:\\s*(true|false)`));
+  return m ? m[1] === 'true' : undefined;
+}
+
+const fallbackBlock = i18nSource.match(
+  /const BASE_LANGUAGE_FALLBACKS = \{([\s\S]*?)\n\} as const;/,
+);
+const fallbackLng = {};
+if (fallbackBlock) {
+  for (const m of fallbackBlock[1].matchAll(/^\s*'?([A-Za-z-]+)'?:\s*\[([^\]]*)\]/gm)) {
+    fallbackLng[m[1]] = [...m[2].matchAll(/'([^']+)'/g)].map((x) => x[1]);
+  }
+}
+
+const declaredLangs = listMatch
+  ? [...listMatch[1].matchAll(/'([^']+)'/g)].map((m) => m[1])
+  : [];
+
+if (declaredLangs.length && Object.keys(fallbackLng).length) {
+  const { default: i18next } = await import('i18next');
+  const probe = i18next.createInstance();
+
+  await probe.init({
+    lng: REFERENCE,
+    fallbackLng,
+    supportedLngs: declaredLangs,
+    nonExplicitSupportedLngs: parseOption('nonExplicitSupportedLngs') ?? false,
+    initImmediate: false,
+    // Give every language a resource so resolution is decided by the language
+    // options under test, not by which bundles happen to exist.
+    resources: Object.fromEntries(
+      declaredLangs.map((code) => [code, { translation: { __probe__: code } }]),
+    ),
+  });
+
+  // Assert on the lookup, not on `resolvedLanguage`. When resolution is broken
+  // this way `resolvedLanguage` still reports the code you asked for — it was
+  // `de-DE` throughout the outage — and only `t()` reveals the miss by handing
+  // back the key. Checking the wrong one gives a test that passes on the bug.
+  const unreachable = [];
+  for (const code of declaredLangs) {
+    await probe.changeLanguage(code);
+    if (probe.t('__probe__') !== code) {
+      unreachable.push(`${code} (resolvedLanguage=${probe.resolvedLanguage ?? 'none'})`);
+    }
+  }
+
+  if (unreachable.length) {
+    fail(
+      'src/lib/i18n/index.ts',
+      `i18next does not resolve ${unreachable.length} shipped locale(s) to themselves; ` +
+        `they would render in the fallback language: ${unreachable.join(', ')}`,
+    );
+  }
+}
+
 // --- report -------------------------------------------------------------------
 
 for (const warning of warnings) console.warn(`  warn  ${warning}`);

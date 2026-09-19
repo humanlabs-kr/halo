@@ -127,7 +127,24 @@ void i18n
     partialBundledLanguages: true,
     fallbackLng: BASE_LANGUAGE_FALLBACKS,
     supportedLngs: [...SUPPORTED_LANGS],
-    nonExplicitSupportedLngs: true,
+    // `nonExplicitSupportedLngs` must stay off, and the reason is not obvious.
+    //
+    // When it is on, i18next reduces a code to its base language *before*
+    // checking `supportedLngs`:
+    //
+    //   isSupportedCode('de-DE') -> supportedLngs.includes('de')
+    //
+    // Eleven of the twenty-one locales we ship are region-tagged (de-DE,
+    // pt-BR, zh-CN, es-419, …) and the bare forms are deliberately not in the
+    // list, so every one of them was judged unsupported and fell back to
+    // English — about a fifth of our users, with no error anywhere. The locale
+    // files were complete and `check-locales` was green the whole time;
+    // nothing but rendering the page in German could show it.
+    //
+    // Bare codes are already handled, and handled better, by
+    // `BASE_LANGUAGE_FALLBACKS` above: a device reporting "de" resolves to
+    // de-DE explicitly, instead of i18next guessing.
+    nonExplicitSupportedLngs: false,
     // Locale files are flat maps of string to string — `check-locales` fails
     // the build on anything else — so i18next's structural separators have no
     // job here, and leaving them on breaks real keys. Source-text keys are
