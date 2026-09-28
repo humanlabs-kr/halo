@@ -5,6 +5,7 @@ import AppLayout from '@/components/AppLayout';
 import { useCrossPromoEnabled } from '@/hooks/useHaloMiniCampaign';
 import { getAuthAdapter } from '@/lib/auth/adapter';
 import { platformFeatures } from '@/lib/constants';
+import { PROJECT_ENV } from '@/lib/env';
 import { useAuthStore } from '@/stores/auth';
 
 // Every page is its own chunk. The login screen is the only thing most first
@@ -139,8 +140,9 @@ export default function App() {
 
         {/* Public and signed out on purpose: it is the live demo for the ENS
             integration, and every value on it is read from Sepolia when the
-            page loads rather than prepared here. */}
-        <Route path="/ens" element={<EnsLive />} />
+            page loads rather than prepared here. Staging only since ETHGlobal
+            Tokyo 2026 ended; production falls through to the catch-all. */}
+        {PROJECT_ENV !== 'production' && <Route path="/ens" element={<EnsLive />} />}
 
         {isAuthenticated ? (
           <>

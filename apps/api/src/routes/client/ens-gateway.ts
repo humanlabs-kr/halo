@@ -81,6 +81,13 @@ const gatewayRoute = createRoute({
 });
 
 export const ensGatewayRoutes = new OpenAPIHono<AppEnv>().openapi(gatewayRoute, async (c) => {
+  // Built for ETHGlobal Tokyo 2026 and kept to staging now that it is over.
+  // The route is public and each call pulls thousands of receipt rows, so in
+  // production it answers before touching the database.
+  if (c.env.PROJECT_ENV === 'production') {
+    return c.json({ error: { code: 'NOT_FOUND' as const, message: 'Endpoint not found' } }, 404);
+  }
+
   const { sender, data } = c.req.valid('json');
 
   // The call the resolver reverted out of is `resolve(bytes,bytes)`; the first
