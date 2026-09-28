@@ -16,6 +16,7 @@
     "deploy:production": "CLOUDFLARE_ENV=production vite build --mode production && wrangler deploy --env production"
   },
   "dependencies": {
+    "@celo/attribution-tags": "^0.3.0",
     "@halo/contracts": "workspace:*",
     "@line/liff": "^2.31.0",
     "@linenext/dapp-portal-sdk": "^1.6.0",

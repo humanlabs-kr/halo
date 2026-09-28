@@ -93,6 +93,9 @@ importers:
 
   apps/miniapp:
     dependencies:
+      '@celo/attribution-tags':
+        specifier: ^0.3.0
+        version: 0.3.0(typescript@5.9.3)(viem@2.56.8(typescript@5.9.3)(zod@3.25.76))(zod@3.25.76)
       '@halo/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -253,6 +256,8 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  packages/hedge: {}
+
   packages/onchain:
     dependencies:
       dotenv:
@@ -412,6 +417,15 @@ packages:
 
   '@base-org/account@2.4.0':
     resolution: {integrity: sha512-A4Umpi8B9/pqR78D1Yoze4xHyQaujioVRqqO3d6xuDFw9VRtjg6tK3bPlwE0aW+nVH/ntllCpPa2PbI8Rnjcug==}
+
+  '@celo/attribution-tags@0.3.0':
+    resolution: {integrity: sha512-6RwRqupxXmKt5GGnUkquViLta7VpyKRr4MZeoVnkMdSBpVurpy9UUd2ortephxustvjBa4iEUj/5+A2rLQgRhQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      viem: ^2
+    peerDependenciesMeta:
+      viem:
+        optional: true
 
   '@cf-wasm/internals@0.1.1':
     resolution: {integrity: sha512-zyl5ThQx3XJhGXbBI6DVsw9dSb7edAHB71goURMg1grGeIso9d0V9oa6HtOd7/9ggYGqTmLvBS/EYJByCrs3Yw==}
@@ -4314,6 +4328,14 @@ packages:
       typescript:
         optional: true
 
+  ox@0.10.6:
+    resolution: {integrity: sha512-J3QUxlwSM0uCL7sm5OsprlEeU6vNdKUyyukh1nUT3Jrog4l2FMJNIZPlffjPXCaS/hJYjdNe3XbEN8jCq1mnEQ==}
+    peerDependencies:
+      typescript: '>=5.4.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   ox@0.14.45:
     resolution: {integrity: sha512-jpsQ+p0JZh9mKCxxzxz0d5qFHZZg2/O9xW18IpEC/dNXXPVqmDJ0c//9RMz0CILkbSGPA42+cbU0fC/ghwJ03w==}
     peerDependencies:
@@ -5543,6 +5565,15 @@ snapshots:
       - utf-8-validate
       - zod
     optional: true
+
+  '@celo/attribution-tags@0.3.0(typescript@5.9.3)(viem@2.56.8(typescript@5.9.3)(zod@3.25.76))(zod@3.25.76)':
+    dependencies:
+      ox: 0.10.6(typescript@5.9.3)(zod@3.25.76)
+    optionalDependencies:
+      viem: 2.56.8(typescript@5.9.3)(zod@3.25.76)
+    transitivePeerDependencies:
+      - typescript
+      - zod
 
   '@cf-wasm/internals@0.1.1': {}
 
@@ -10177,6 +10208,21 @@ snapshots:
     dependencies:
       '@adraffy/ens-normalize': 1.11.1
       '@noble/curves': 1.9.7
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.3.0(typescript@5.9.3)(zod@3.25.76)
+      eventemitter3: 5.0.1
+    optionalDependencies:
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - zod
+
+  ox@0.10.6(typescript@5.9.3)(zod@3.25.76):
+    dependencies:
+      '@adraffy/ens-normalize': 1.11.1
+      '@noble/ciphers': 1.3.0
+      '@noble/curves': 1.9.1
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0

@@ -9,6 +9,7 @@ import { ApiRequestError } from '@/lib/api/client';
 import { pointApi } from '@/lib/api/point';
 import { pointStatQueryKey, receiptsQueryKey } from '@/lib/api/queries';
 import { sendSuccessNotificationHaptic } from '@/lib/haptic';
+import { CELO_DATA_SUFFIX } from '@/lib/celo-attribution';
 import { PLATFORM_CHAIN } from '@/lib/wagmi';
 import { useAuthStore } from '@/stores/auth';
 
@@ -147,6 +148,7 @@ export function usePointClaim(): PointClaim {
           ],
           chain: PLATFORM_CHAIN.celo,
           account: address,
+          dataSuffix: CELO_DATA_SUFFIX,
         });
 
         sendSuccessNotificationHaptic();

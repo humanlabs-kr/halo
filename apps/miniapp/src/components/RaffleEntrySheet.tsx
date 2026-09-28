@@ -16,6 +16,7 @@ import { CloseIcon, MinusIcon, PlusIcon } from '@/components/ui/icons';
 import { pointStatQueryKey, rafflePoolsQueryKey, usePointStat } from '@/lib/api/queries';
 import { REWARD_CURRENCY } from '@/lib/constants';
 import { getSafeAreaInsetBottom } from '@/lib/safe-area';
+import { CELO_DATA_SUFFIX } from '@/lib/celo-attribution';
 import { PLATFORM_CHAIN } from '@/lib/wagmi';
 import { useAuthStore } from '@/stores/auth';
 import { useFormatters } from '@/lib/format';
@@ -125,6 +126,8 @@ export default function RaffleEntrySheet({
             ],
             chain: PLATFORM_CHAIN[platform],
             account: address,
+            // Celo's attribution code means nothing on another chain.
+            dataSuffix: platform === 'celo' ? CELO_DATA_SUFFIX : undefined,
           });
           toast.success(t('Successfully entered the raffle!'));
         } catch {

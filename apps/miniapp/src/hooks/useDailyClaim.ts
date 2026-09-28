@@ -5,6 +5,7 @@ import { POINT_CLAIM_ABI } from '@halo/contracts';
 import { hasApiErrorCode } from '@/lib/api/client';
 import { pointStatQueryKey, useClaimDailyPoint, useClaimDailyPointCelo } from '@/lib/api/queries';
 import { sendSuccessNotificationHaptic } from '@/lib/haptic';
+import { CELO_DATA_SUFFIX } from '@/lib/celo-attribution';
 import { PLATFORM_CHAIN } from '@/lib/wagmi';
 import { useAuthStore } from '@/stores/auth';
 
@@ -104,6 +105,7 @@ export function useDailyClaim({
           ],
           chain: PLATFORM_CHAIN.celo,
           account: address,
+          dataSuffix: CELO_DATA_SUFFIX,
         });
         localStorage.setItem(KEYS.onchain, todayUTC());
         setOnchainDone(true);
